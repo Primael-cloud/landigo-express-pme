@@ -1,0 +1,20 @@
+{
+  "id": "7D577C8D",
+  "invoice_number": "FAC-LANDIGO-2026-7D577C8D",
+  "created_at": "08/09/2026 09:17",
+  "company_name": "REFLET",
+  "sector": "Restauration & Alimentation",
+  "whatsapp": "+2250759556298",
+  "email": "N/A",
+  "city_country": "Abidjan",
+  "color_theme": "Bleu & Orange Tech",
+  "notes": "",
+  "items": [
+    {
+      "description": "Conception & Design Landing Page Sur-Mesure TPE/PME (Responsive & SEO de base)",
+      "amount": 45000
+    }
+  ],
+  "total_fcfa": 45000,
+  "status": "EN_ATTENTE_DE_PAIEMENT"
+}

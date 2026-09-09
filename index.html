@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Landigo - Landing Pages Sur-Mesure & Express pour TPE / PME</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- html2pdf.js pour génération PDF haute qualité -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        landigo: {
+                            orange: '#FF6B00',
+                            navy: '#0B132B',
+                            blue: '#1C2541',
+                            cyan: '#00F0FF',
+                            light: '#F8FAFC'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-text {
+            background: linear-gradient(135deg, #FF6B00 0%, #FF9E00 50%, #00F0FF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #0B132B 0%, #1C2541 100%);
+        }
+        .card-glow:hover {
+            box-shadow: 0 20px 40px -15px rgba(255, 107, 0, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased selection:bg-orange-500 selection:text-white">
+
+    <!-- HEADER / NAVIGATION -->
+    <header class="sticky top-0 z-40 backdrop-blur-md bg-white/90 border-b border-slate-100 transition-all">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+                <img src="/public/logo.jpg" alt="Landigo Logo" class="h-11 w-11 rounded-xl object-cover shadow-md shadow-orange-500/20">
+                <span class="text-2xl font-extrabold text-slate-900 tracking-tight">Land<span class="text-orange-500">igo</span></span>
+                <span class="hidden sm:inline-block px-2.5 py-0.5 text-xs font-semibold bg-orange-100 text-orange-600 rounded-full">Afrique de l'Ouest</span>
+            </div>
+
+            <nav class="hidden md:flex items-center space-x-8 font-medium text-slate-600">
+                <a href="#avantages" class="hover:text-orange-500 transition">Avantages</a>
+                <a href="#modeles" class="hover:text-orange-500 transition">Modèles</a>
+                <a href="#brief" class="hover:text-orange-500 transition">Devis & Brief</a>
+                <a href="#faq" class="hover:text-orange-500 transition">FAQ</a>
+            </nav>
+
+            <div class="flex items-center space-x-4">
+                <button onclick="scrollToBrief()" class="relative inline-flex items-center justify-center px-6 py-3 font-semibold text-white transition-all bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-105 active:scale-95">
+                    <i class="fa-solid fa-rocket mr-2"></i> Créer Ma Landing Page
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="relative overflow-hidden bg-slate-900 text-white pt-20 pb-32">
+        <div class="absolute inset-0 opacity-20 bg-[radial-gradient(#FF6B00_1px,transparent_1px)] [background-size:16px_16px]"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center max-w-3xl mx-auto">
+                <div class="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-slate-800/80 border border-slate-700 text-orange-400 text-sm font-semibold mb-8 backdrop-blur-sm">
+                    <span class="flex h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span>Service Express TPE/PME - Livraison en 48h</span>
+                </div>
+                
+                <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight leading-tight mb-6">
+                    Propulsez votre entreprise avec une <span class="gradient-text">Landing Page sur-mesure</span>
+                </h1>
+                
+                <p class="text-lg sm:text-xl text-slate-300 mb-10 leading-relaxed">
+                    Attirez plus de clients, vendez directement sur WhatsApp et dynamisez votre visibilité en Afrique de l'Ouest. Tarifs transparents sur-mesure avec facture pro-forma et paiement sécurisé par **Mobile Money**.
+                </p>
+
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <button onclick="scrollToBrief()" class="w-full sm:w-auto px-8 py-4 bg-orange-500 hover:bg-orange-600 text-white text-lg font-bold rounded-xl shadow-xl shadow-orange-500/30 transition transform hover:-translate-y-0.5">
+                        Lancer Mon Brief Sur-Mesure <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </button>
+                    <a href="#modeles" class="w-full sm:w-auto px-8 py-4 bg-slate-800 hover:bg-slate-700 text-slate-200 text-lg font-semibold rounded-xl border border-slate-700 transition">
+                        Voir les Démos
+                    </a>
+                </div>
+
+                <!-- Trust badges -->
+                <div class="mt-16 pt-8 border-t border-slate-800/80 grid grid-cols-2 md:grid-cols-4 gap-6 text-slate-400 text-sm">
+                    <div class="flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-bolt text-orange-400 text-lg"></i>
+                        <span>Conception en 48H</span>
+                    </div>
+                    <div class="flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-mobile-screen-button text-emerald-400 text-lg"></i>
+                        <span>Mobile Money (Wave, Orange, MTN, Moov)</span>
+                    </div>
+                    <div class="flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-file-invoice text-cyan-400 text-lg"></i>
+                        <span>Facture Pro-forma Transparente</span>
+                    </div>
+                    <div class="flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-robot text-purple-400 text-lg"></i>
+                        <span>Assistant IA 24/7</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AVANTAGES / FEATURES SECTION -->
+    <section id="avantages" class="py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-2xl mx-auto mb-16">
+                <h2 class="text-xs font-bold uppercase tracking-widest text-orange-500 mb-2">Pourquoi Landigo ?</h2>
+                <p class="text-3xl font-extrabold text-slate-900 sm:text-4xl">La meilleure solution de visibilité pour les TPE & PME</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="p-8 rounded-2xl bg-slate-50 border border-slate-100 card-glow transition">
+                    <div class="w-14 h-14 bg-orange-100 text-orange-500 rounded-xl flex items-center justify-center text-2xl font-bold mb-6">
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">WhatsApp First & Conversions</h3>
+                    <p class="text-slate-600 leading-relaxed">
+                        Des boutons d'appel à l'action WhatsApp optimisés pour diriger chaque prospect directement vers votre téléphone ou votre équipe commerciale.
+                    </p>
+                </div>
+
+                <div class="p-8 rounded-2xl bg-slate-50 border border-slate-100 card-glow transition">
+                    <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-2xl font-bold mb-6">
+                        <i class="fa-solid fa-sliders"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Formulaire & Prix Sur-Mesure</h3>
+                    <p class="text-slate-600 leading-relaxed">
+                        Pas de frais cachés. Vous sélectionnez précisément vos options et notre générateur produit une facture pro-forma claire avant tout travail.
+                    </p>
+                </div>
+
+                <div class="p-8 rounded-2xl bg-slate-50 border border-slate-100 card-glow transition">
+                    <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center text-2xl font-bold mb-6">
+                        <i class="fa-solid fa-credit-card"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Paiement Mobile Money Simplifié</h3>
+                    <p class="text-slate-600 leading-relaxed">
+                        Intégration fluide via CinetPay : payez directement depuis votre smartphone avec Orange Money, MTN MoMo, Wave ou Moov Money.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- GALERIE DE MODÈLES -->
+    <section id="modeles" class="py-24 bg-slate-50 border-y border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-2xl mx-auto mb-16">
+                <h2 class="text-xs font-bold uppercase tracking-widest text-orange-500 mb-2">Exemples de Réalisations</h2>
+                <p class="text-3xl font-extrabold text-slate-900 sm:text-4xl">Des designs conçus pour chaque secteur d'activité</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Modèle 1 -->
+                <div class="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-md transition">
+                    <div class="h-48 bg-gradient-to-r from-blue-600 to-indigo-700 p-6 flex flex-col justify-between text-white">
+                        <span class="px-3 py-1 bg-white/20 backdrop-blur-sm text-xs font-semibold rounded-full w-max">BTP & Services</span>
+                        <div>
+                            <h4 class="text-xl font-bold">Cabinet & Propreté Pro</h4>
+                            <p class="text-xs opacity-90">Présentation des prestations, devis rapide</p>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <ul class="text-sm text-slate-600 space-y-2 mb-6">
+                            <li><i class="fa-solid fa-check text-emerald-500 mr-2"></i> Formulaire de demande de devis</li>
+                            <li><i class="fa-solid fa-check text-emerald-500 mr-2"></i> Bouton d'appel rapide</li>
+                            <li><i class="fa-solid fa-check text-emerald-500 mr-2"></i> Avis clients & références</li>
+                        </ul>
+                        <button onclick="selectTemplate('BTP & Services')" class="w-full py-2.5 bg-slate-100 hover:bg-orange-500 hover:text-white text-slate-700 font-semibold rounded-lg transition">Choisir ce Style</button>
+                    </div>
+                </div>
+
+                <!-- Modèle 2 -->
+                <div class="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-md transition">
+                    <div class="h-48 bg-gradient-to-r from-orange-500 to-amber-600 p-6 flex flex-col justify-between text-white">
+                        <span class="px-3 py-1 bg-white/20 backdrop-blur-sm text-xs font-semibold rounded-full w-max">Restauration & Maquis</span>
+                        <div>
+                            <h4 class="text-xl font-bold">Restaurant & Fast-Food</h4>
+                            <p class="text-xs opacity-90">Menu digital, commandes WhatsApp</p>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <ul class="text-sm text-slate-600 space-y-2 mb-6">
+                            <li><i class="fa-solid fa-check text-emerald-500 mr-2"></i> Menu interactif en ligne</li>
+                            <li><i class="fa-solid fa-check text-emerald-500 mr-2"></i> Commande directe sur WhatsApp</li>
+                            <li><i class="fa-solid fa-check text-emerald-500 mr-2"></i> Localisation Google Maps</li>
+                        </ul>
+                        <button onclick="selectTemplate('Restauration')" class="w-full py-2.5 bg-slate-100 hover:bg-orange-500 hover:text-white text-slate-700 font-semibold rounded-lg transition">Choisir ce Style</button>
+                    </div>
+                </div>
+
+                <!-- Modèle 3 -->
+                <div class="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-md transition">
+                    <div class="h-48 bg-gradient-to-r from-emerald-600 to-teal-700 p-6 flex flex-col justify-between text-white">
+                        <span class="px-3 py-1 bg-white/20 backdrop-blur-sm text-xs font-semibold rounded-full w-max">Boutique & Mode</span>
+                        <div>
+                            <h4 class="text-xl font-bold">E-Commerce Flash</h4>
+                            <p class="text-xs opacity-90">Vitrine produits & paiement rapide</p>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <ul class="text-sm text-slate-600 space-y-2 mb-6">
+                            <li><i class="fa-solid fa-check text-emerald-500 mr-2"></i> Grille de produits en vedette</li>
+                            <li><i class="fa-solid fa-check text-emerald-500 mr-2"></i> Intégration Mobile Money</li>
+                            <li><i class="fa-solid fa-check text-emerald-500 mr-2"></i> Promo du moment & Compte à rebours</li>
+                        </ul>
+                        <button onclick="selectTemplate('Mode & Commerce')" class="w-full py-2.5 bg-slate-100 hover:bg-orange-500 hover:text-white text-slate-700 font-semibold rounded-lg transition">Choisir ce Style</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BRIEF FORMULAIRE & GENERATION DE DEVIS -->
+    <section id="brief" class="py-24 bg-white">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <span class="px-3 py-1 bg-orange-100 text-orange-600 font-bold text-xs rounded-full uppercase tracking-wider">Étape 1 sur 2</span>
+                <h2 class="text-3xl font-extrabold text-slate-900 mt-3 sm:text-4xl">Remplissez votre Brief Sur-Mesure</h2>
+                <p class="text-slate-600 mt-2">Précisez vos besoins pour générer immédiatement votre facture pro-forma sur-mesure.</p>
+            </div>
+
+            <form id="briefForm" onsubmit="submitBrief(event)" class="bg-slate-50 border border-slate-200 rounded-3xl p-8 sm:p-10 shadow-lg">
+                <!-- Section 1 : Entreprise -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center">
+                        <span class="w-8 h-8 rounded-lg bg-orange-500 text-white flex items-center justify-center mr-3 text-sm">1</span>
+                        Informations de l'Entreprise
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Nom de la TPE / PME *</label>
+                            <input type="text" id="company_name" required placeholder="Ex: Ivoire Bio Pharma, Pressing Express..." class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Secteur d'Activité *</label>
+                            <select id="sector" required class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition">
+                                <option value="BTP & Construction">BTP & Construction</option>
+                                <option value="Restauration & Alimentation">Restauration & Alimentation</option>
+                                <option value="Commerce & Boutiques">Commerce & Boutiques</option>
+                                <option value="Services & Conseil">Services & Conseil</option>
+                                <option value="Santé & Beauté">Santé & Beauté</option>
+                                <option value="Autre">Autre secteur</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Numéro WhatsApp Client *</label>
+                            <input type="tel" id="whatsapp" required placeholder="+225 0700000000" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Adresse email *</label>
+                            <input type="email" id="email" required placeholder="contact@votreentreprise.com" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Ville & Pays *</label>
+                            <input type="text" id="city_country" required placeholder="Abidjan, Côte d'Ivoire" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2 : Options & Fonctionnalités sur-mesure -->
+                <div class="mb-8 border-t border-slate-200 pt-8">
+                    <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center">
+                        <span class="w-8 h-8 rounded-lg bg-orange-500 text-white flex items-center justify-center mr-3 text-sm">2</span>
+                        Sélection des Options Sur-Mesure
+                    </h3>
+                    <div class="space-y-4">
+                        <label class="flex items-start p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-orange-400 transition">
+                            <input type="checkbox" checked disabled class="mt-1 h-5 w-5 text-orange-500 rounded border-slate-300 focus:ring-orange-500">
+                            <div class="ml-3">
+                                <span class="block text-sm font-bold text-slate-900">Pack Base Landing Page Sur-Mesure (Inclus)</span>
+                                <span class="block text-xs text-slate-500">Design responsive complet, hébergement rapide, section d'accueil, présentation & contact.</span>
+                            </div>
+                            <span class="ml-auto font-bold text-orange-600 text-sm">45 000 FCFA</span>
+                        </label>
+
+                        <label class="flex items-start p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-orange-400 transition">
+                            <input type="checkbox" value="whatsapp_direct" onchange="calculatePrice()" class="option-check mt-1 h-5 w-5 text-orange-500 rounded border-slate-300 focus:ring-orange-500">
+                            <div class="ml-3">
+                                <span class="block text-sm font-bold text-slate-900">Intégration WhatsApp Direct & Boutons Flottants</span>
+                                <span class="block text-xs text-slate-500">Permet à vos visiteurs de lancer une discussion directe pré-remplie sur votre WhatsApp.</span>
+                            </div>
+                            <span class="ml-auto font-bold text-slate-700 text-sm">+10 000 FCFA</span>
+                        </label>
+
+                        <label class="flex items-start p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-orange-400 transition">
+                            <input type="checkbox" value="express_24h" onchange="calculatePrice()" class="option-check mt-1 h-5 w-5 text-orange-500 rounded border-slate-300 focus:ring-orange-500">
+                            <div class="ml-3">
+                                <span class="block text-sm font-bold text-slate-900">Livraison Garantie en 24H - 48H Chrono</span>
+                                <span class="block text-xs text-slate-500">Traitement prioritaire par nos designers et développeurs.</span>
+                            </div>
+                            <span class="ml-auto font-bold text-slate-700 text-sm">+15 000 FCFA</span>
+                        </label>
+
+                        <label class="flex items-start p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-orange-400 transition">
+                            <input type="checkbox" value="domain_hosting" onchange="calculatePrice()" class="option-check mt-1 h-5 w-5 text-orange-500 rounded border-slate-300 focus:ring-orange-500">
+                            <div class="ml-3">
+                                <span class="block text-sm font-bold text-slate-900">Nom de Domaine Personnalisé (.ci, .sn, .com) + Hébergement 1 An</span>
+                                <span class="block text-xs text-slate-500">Votre adresse web propre (ex: www.monentreprise.ci) avec certificat SSL sécurisé.</span>
+                            </div>
+                            <span class="ml-auto font-bold text-slate-700 text-sm">+25 000 FCFA</span>
+                        </label>
+
+                        <label class="flex items-start p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-orange-400 transition">
+                            <input type="checkbox" value="catalog_products" onchange="calculatePrice()" class="option-check mt-1 h-5 w-5 text-orange-500 rounded border-slate-300 focus:ring-orange-500">
+                            <div class="ml-3">
+                                <span class="block text-sm font-bold text-slate-900">Catalogue de Produits / Services Interactif</span>
+                                <span class="block text-xs text-slate-500">Présentation visuelle de jusqu'à 10 articles ou prestations avec tarifs.</span>
+                            </div>
+                            <span class="ml-auto font-bold text-slate-700 text-sm">+20 000 FCFA</span>
+                        </label>
+
+                        <label class="flex items-start p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-orange-400 transition">
+                            <input type="checkbox" value="seo_pro" onchange="calculatePrice()" class="option-check mt-1 h-5 w-5 text-orange-500 rounded border-slate-300 focus:ring-orange-500">
+                            <div class="ml-3">
+                                <span class="block text-sm font-bold text-slate-900">Pack SEO Local & Indexation Google Maps</span>
+                                <span class="block text-xs text-slate-500">Optimisation pour apparaître dans les recherches Google dans votre ville.</span>
+                            </div>
+                            <span class="ml-auto font-bold text-slate-700 text-sm">+15 000 FCFA</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Récapitulatif Tarif & Validation -->
+                <div class="bg-slate-900 text-white rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6">
+                    <div>
+                        <span class="text-xs uppercase text-slate-400 font-semibold tracking-wider">Montant Total Devis Sur-Mesure</span>
+                        <div class="text-3xl font-extrabold text-orange-400" id="totalPriceDisplay">45 000 FCFA</div>
+                    </div>
+                    <button type="submit" class="w-full sm:w-auto px-8 py-4 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl shadow-lg transition transform hover:scale-105">
+                        Générer Ma Facture Pro-Forma <i class="fa-solid fa-file-invoice-dollar ml-2"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- MODAL FACTURE PRO-FORMA / DEVIS -->
+    <div id="invoiceModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-10 shadow-2xl relative my-8 max-h-[90vh] overflow-y-auto">
+            <button onclick="closeInvoiceModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-700 text-xl"><i class="fa-solid fa-xmark"></i></button>
+
+            <!-- Entête Facture -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-200 pb-6 mb-6">
+                <div class="flex items-center space-x-3">
+                    <img src="/public/logo.jpg" alt="Landigo Logo" class="h-12 w-12 rounded-xl">
+                    <div>
+                        <h3 class="text-2xl font-black text-slate-900">Land<span class="text-orange-500">igo</span></h3>
+                        <p class="text-xs text-slate-500">Facture Pro-Forma Officielle</p>
+                    </div>
+                </div>
+                <div class="mt-4 sm:mt-0 text-left sm:text-right">
+                    <span id="invStatusBadge" class="inline-block px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full mb-1">EN ATTENTE DE PAIEMENT</span>
+                    <p class="text-sm font-bold text-slate-800" id="invNumber">FAC-LANDIGO-2026-XXXX</p>
+                    <p class="text-xs text-slate-500" id="invDate">Date : 08/09/2026</p>
+                </div>
+            </div>
+
+            <!-- Infos Client & Prestataire -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 text-sm bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <div>
+                    <h5 class="font-bold text-slate-900 mb-1">Client :</h5>
+                    <p class="font-semibold text-orange-600" id="invClientCompany">Entreprise Client</p>
+                    <p id="invClientCity">Abidjan, Côte d'Ivoire</p>
+                    <p id="invClientWhatsapp">WhatsApp : +225 0000000</p>
+                    <p id="invClientEmail">Email : client@example.com</p>
+                </div>
+                <div>
+                    <h5 class="font-bold text-slate-900 mb-1">Prestataire :</h5>
+                    <p class="font-semibold text-slate-800">Landigo Digital Agency</p>
+                    <p>Afrique de l'Ouest (Cote d'Ivoire / Sénégal)</p>
+                    <p>Support : contact@landigo.africa</p>
+                </div>
+            </div>
+
+            <!-- Tableau Prestations -->
+            <div class="overflow-x-auto mb-8">
+                <table class="w-full text-left text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-200 text-slate-500 uppercase text-xs">
+                            <th class="py-3">Prestation / Option</th>
+                            <th class="py-3 text-right">Montant (FCFA)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invItemsTable" class="divide-y divide-slate-100 text-slate-700">
+                        <!-- Rempli en JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Total -->
+            <div class="border-t border-slate-200 pt-4 mb-8 flex justify-between items-center text-lg font-bold">
+                <span>Total à régler :</span>
+                <span class="text-2xl font-black text-orange-600" id="invTotalAmount">45 000 FCFA</span>
+            </div>
+
+            <!-- Action Payments -->
+            <div class="flex flex-col sm:flex-row gap-4">
+                <button onclick="downloadPDF()" class="w-full sm:w-1/2 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">
+                    <i class="fa-solid fa-file-pdf text-red-500 mr-2"></i> Télécharger Facture PDF
+                </button>
+                <button onclick="openPaymentModal()" class="w-full sm:w-1/2 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg transition">
+                    <i class="fa-solid fa-mobile-screen mr-2"></i> Payer par Mobile Money
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PAIEMENT MOBILE MONEY (CINETPAY) -->
+    <div id="paymentModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl relative">
+            <button onclick="closePaymentModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-700 text-xl"><i class="fa-solid fa-xmark"></i></button>
+
+            <div class="text-center mb-6">
+                <span class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full inline-flex items-center justify-center text-xl mb-3"><i class="fa-solid fa-lock"></i></span>
+                <h3 class="text-2xl font-bold text-slate-900">Paiement Mobile Money</h3>
+                <p class="text-xs text-slate-500 mt-1">Passerelle CinetPay Sécurisée</p>
+            </div>
+
+            <!-- Choix Operateur -->
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-slate-700 mb-3">Sélectionnez votre opérateur :</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <button type="button" onclick="selectOperator('Orange Money')" class="op-btn p-3 border-2 border-orange-500 rounded-xl flex items-center space-x-2 bg-orange-50/50">
+                        <span class="w-4 h-4 bg-orange-500 rounded-full"></span>
+                        <span class="text-xs font-bold text-slate-800">Orange Money</span>
+                    </button>
+                    <button type="button" onclick="selectOperator('Wave')" class="op-btn p-3 border border-slate-200 rounded-xl flex items-center space-x-2 hover:border-cyan-500">
+                        <span class="w-4 h-4 bg-cyan-400 rounded-full"></span>
+                        <span class="text-xs font-bold text-slate-800">Wave</span>
+                    </button>
+                    <button type="button" onclick="selectOperator('MTN MoMo')" class="op-btn p-3 border border-slate-200 rounded-xl flex items-center space-x-2 hover:border-yellow-500">
+                        <span class="w-4 h-4 bg-yellow-400 rounded-full"></span>
+                        <span class="text-xs font-bold text-slate-800">MTN MoMo</span>
+                    </button>
+                    <button type="button" onclick="selectOperator('Moov Money')" class="op-btn p-3 border border-slate-200 rounded-xl flex items-center space-x-2 hover:border-blue-500">
+                        <span class="w-4 h-4 bg-blue-500 rounded-full"></span>
+                        <span class="text-xs font-bold text-slate-800">Moov Money</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Input Tel -->
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-slate-700 mb-2">Numéro de Téléphone Mobile Money</label>
+                <input type="tel" id="payPhone" placeholder="Ex: 0708091011" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none">
+            </div>
+
+            <button onclick="processPayment()" id="payConfirmBtn" class="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold rounded-xl shadow-lg transition">
+                Valider le Paiement (<span id="payAmountText">45 000 FCFA</span>)
+            </button>
+        </div>
+    </div>
+
+    <!-- CHATBOT IA FLOTTANT -->
+    <div id="chatbotContainer" class="fixed bottom-6 right-6 z-40">
+        <!-- Chatbox hidden by default -->
+        <div id="chatBox" class="hidden w-80 sm:w-96 bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col mb-4 transition-all">
+            <div class="bg-slate-900 text-white p-4 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-full bg-orange-500 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-robot text-white text-sm"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm">Landigo Assistant IA</h4>
+                        <span class="text-xs text-emerald-400 flex items-center"><span class="h-1.5 w-1.5 rounded-full bg-emerald-400 mr-1.5"></span> En ligne</span>
+                    </div>
+                </div>
+                <button onclick="toggleChatbot()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div id="chatMessages" class="p-4 h-72 overflow-y-auto space-y-3 bg-slate-50 text-xs">
+                <div class="bg-white p-3 rounded-2xl border border-slate-200 max-w-[85%] text-slate-700">
+                    Bonjour ! Je suis **Landigo Bot**. Une question sur la création de votre Landing Page ou nos paiements Mobile Money ?
+                </div>
+            </div>
+
+            <div class="p-3 bg-white border-t border-slate-100 flex items-center space-x-2">
+                <input type="text" id="chatInput" onkeypress="if(event.key==='Enter') sendChatMessage()" placeholder="Posez votre question..." class="flex-1 px-3 py-2 bg-slate-100 rounded-xl text-xs outline-none focus:ring-2 focus:ring-orange-500">
+                <button onclick="sendChatMessage()" class="w-8 h-8 bg-orange-500 text-white rounded-xl flex items-center justify-center"><i class="fa-solid fa-paper-plane text-xs"></i></button>
+            </div>
+        </div>
+
+        <!-- Toggle Button -->
+        <button onclick="toggleChatbot()" class="w-14 h-14 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl hover:scale-110 active:scale-95 transition">
+            <i class="fa-solid fa-comments"></i>
+        </button>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <div class="flex items-center justify-center space-x-3 mb-4">
+                <img src="/public/logo.jpg" alt="Landigo Logo" class="h-8 w-8 rounded-lg">
+                <span class="text-xl font-bold text-white">Landigo</span>
+            </div>
+            <p class="text-xs text-slate-500 mb-6">Plateforme de création express de landing pages sur-mesure pour TPE et PME en Afrique de l'Ouest.</p>
+            <p class="text-xs">&copy; 2026 Landigo Africa. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    <!-- JS LOGIC -->
+    <script>
+        let currentBriefData = null;
+        let selectedOperatorName = "Orange Money";
+
+        function scrollToBrief() {
+            document.getElementById('brief').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function calculatePrice() {
+            let total = 45000;
+            const checkboxes = document.querySelectorAll('.option-check');
+            checkboxes.forEach(cb => {
+                if (cb.checked) {
+                    if (cb.value === 'whatsapp_direct') total += 10000;
+                    if (cb.value === 'express_24h') total += 15000;
+                    if (cb.value === 'domain_hosting') total += 25000;
+                    if (cb.value === 'catalog_products') total += 20000;
+                    if (cb.value === 'seo_pro') total += 15000;
+                }
+            });
+            document.getElementById('totalPriceDisplay').innerText = total.toLocaleString('fr-FR') + ' FCFA';
+            return total;
+        }
+
+        function selectTemplate(sector) {
+            scrollToBrief();
+            document.getElementById('sector').value = sector === 'Restauration' ? 'Restauration & Alimentation' : (sector === 'BTP & Services' ? 'BTP & Construction' : 'Commerce & Boutiques');
+        }
+
+        async function submitBrief(e) {
+            e.preventDefault();
+            const company_name = document.getElementById('company_name').value;
+            const sector = document.getElementById('sector').value;
+            const whatsapp = document.getElementById('whatsapp').value;
+            const email = document.getElementById('email').value;
+            const city_country = document.getElementById('city_country').value;
+
+            const selectedOptions = [];
+            document.querySelectorAll('.option-check').forEach(cb => {
+                if (cb.checked) selectedOptions.push(cb.value);
+            });
+
+            const payload = { company_name, sector, whatsapp, email, city_country, options: selectedOptions };
+
+            try {
+                const res = await fetch('/api/brief', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    currentBriefData = result.data;
+                    renderInvoice(result.data);
+                    document.getElementById('invoiceModal').classList.remove('hidden');
+                }
+            } catch (err) {
+                alert('Erreur de connexion au serveur.');
+            }
+        }
+
+        function renderInvoice(data) {
+            document.getElementById('invNumber').innerText = data.invoice_number;
+            document.getElementById('invDate').innerText = 'Date : ' + data.created_at;
+            document.getElementById('invClientCompany').innerText = data.company_name + ' (' + data.sector + ')';
+            document.getElementById('invClientCity').innerText = data.city_country;
+            document.getElementById('invClientWhatsapp').innerText = 'WhatsApp : ' + data.whatsapp;
+            document.getElementById('invClientEmail').innerText = 'Email : ' + (data.email || 'Non renseigné');
+
+            const tableBody = document.getElementById('invItemsTable');
+            tableBody.innerHTML = '';
+            data.items.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-3 font-medium">${item.description}</td>
+                    <td class="py-3 text-right font-bold">${item.amount.toLocaleString('fr-FR')} FCFA</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+
+            document.getElementById('invTotalAmount').innerText = data.total_fcfa.toLocaleString('fr-FR') + ' FCFA';
+            document.getElementById('payAmountText').innerText = data.total_fcfa.toLocaleString('fr-FR') + ' FCFA';
+
+            const statusBadge = document.getElementById('invStatusBadge');
+            if (data.status === 'PAYE') {
+                statusBadge.innerText = 'PAYÉ VIA ' + (data.payment_method || 'MOBILE MONEY');
+                statusBadge.className = 'inline-block px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full mb-1';
+            } else {
+                statusBadge.innerText = 'EN ATTENTE DE PAIEMENT';
+                statusBadge.className = 'inline-block px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full mb-1';
+            }
+        }
+
+        function closeInvoiceModal() {
+            document.getElementById('invoiceModal').classList.add('hidden');
+        }
+
+        function downloadPDF() {
+            if (!currentBriefData) return;
+            const element = document.querySelector('#invoiceModal > div');
+            const opt = {
+                margin:       0.5,
+                filename:     currentBriefData.invoice_number + '.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        function openPaymentModal() {
+            document.getElementById('paymentModal').classList.remove('hidden');
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').classList.add('hidden');
+        }
+
+        function selectOperator(name) {
+            selectedOperatorName = name;
+            document.querySelectorAll('.op-btn').forEach(btn => {
+                btn.className = 'op-btn p-3 border border-slate-200 rounded-xl flex items-center space-x-2';
+            });
+            event.currentTarget.className = 'op-btn p-3 border-2 border-orange-500 rounded-xl flex items-center space-x-2 bg-orange-50/50';
+        }
+
+        async function processPayment() {
+            if (!currentBriefData) return;
+            const phone = document.getElementById('payPhone').value;
+            if (!phone) {
+                alert('Veuillez entrer votre numéro Mobile Money.');
+                return;
+            }
+
+            const btn = document.getElementById('payConfirmBtn');
+            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin mr-2"></i> Traitement en cours...';
+
+            try {
+                const res = await fetch('/api/payment/simulate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: currentBriefData.id, payment_method: selectedOperatorName, phone })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    currentBriefData = result.data;
+                    renderInvoice(result.data);
+                    closePaymentModal();
+                    alert('Félicitations ! ' + result.message + '\nVotre équipe Landigo démarre la conception sur-mesure de votre Landing Page.');
+                }
+            } catch (err) {
+                alert('Erreur lors du traitement du paiement.');
+            } finally {
+                btn.innerText = 'Valider le Paiement (' + currentBriefData.total_fcfa.toLocaleString('fr-FR') + ' FCFA)';
+            }
+        }
+
+        function toggleChatbot() {
+            document.getElementById('chatBox').classList.toggle('hidden');
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            const messagesDiv = document.getElementById('chatMessages');
+            
+            // Add user message
+            const userBubble = document.createElement('div');
+            userBubble.className = 'bg-orange-500 text-white p-3 rounded-2xl ml-auto max-w-[85%] font-medium';
+            userBubble.innerText = msg;
+            messagesDiv.appendChild(userBubble);
+
+            input.value = '';
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+            try {
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: msg })
+                });
+                const data = await res.json();
+                
+                // Add Bot message
+                const botBubble = document.createElement('div');
+                botBubble.className = 'bg-white p-3 rounded-2xl border border-slate-200 max-w-[85%] text-slate-700';
+                botBubble.innerText = data.reply;
+                messagesDiv.appendChild(botBubble);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Landigo Express Admin - Gestion des Commandes & Factures</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        // Check Authentication Token on Load
+        const token = localStorage.getItem('landigo_admin_token');
+        if (!token) {
+            window.location.href = '/admin-login';
+        }
+    </script>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 antialiased">
+    <!-- Navbar Admin -->
+    <header class="bg-slate-900 text-white sticky top-0 z-30 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <img src="/public/logo.jpg" alt="Landigo Logo" class="h-9 w-9 rounded-lg">
+                <span class="text-xl font-black">Land<span class="text-orange-500">igo</span> <span class="text-xs font-semibold bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full ml-2">Back-Office Admin</span></span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="/" target="_blank" class="text-xs font-bold text-slate-300 hover:text-white"><i class="fa-solid fa-globe mr-1"></i> landigo-express.com</a>
+                <button onclick="fetchOrders()" class="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg transition"><i class="fa-solid fa-rotate mr-1"></i> Actualiser</button>
+                <button onclick="logout()" class="px-3 py-1.5 bg-slate-800 hover:bg-red-600 text-slate-300 hover:text-white text-xs font-bold rounded-lg transition"><i class="fa-solid fa-right-from-bracket mr-1"></i> Déconnexion</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <!-- Stats Row -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Commandes</span>
+                    <span class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold"><i class="fa-solid fa-shopping-bag"></i></span>
+                </div>
+                <div class="text-3xl font-extrabold text-slate-900 mt-2" id="statTotalOrders">0</div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Commandes Payées</span>
+                    <span class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-sm font-bold"><i class="fa-solid fa-circle-check"></i></span>
+                </div>
+                <div class="text-3xl font-extrabold text-emerald-600 mt-2" id="statPaidOrders">0</div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">En Attente de Paiement</span>
+                    <span class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-sm font-bold"><i class="fa-solid fa-clock"></i></span>
+                </div>
+                <div class="text-3xl font-extrabold text-amber-600 mt-2" id="statPendingOrders">0</div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Chiffre d'Affaires</span>
+                    <span class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-sm font-bold"><i class="fa-solid fa-wallet"></i></span>
+                </div>
+                <div class="text-2xl font-extrabold text-purple-600 mt-2" id="statTotalRevenue">0 FCFA</div>
+            </div>
+        </div>
+
+        <!-- Orders Table Card -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 class="text-lg font-extrabold text-slate-900">Base de Données des Commandes Client</h2>
+                    <p class="text-xs text-slate-500">Gestion des briefs, des factures et suivi de livraison.</p>
+                </div>
+                <div>
+                    <select id="statusFilter" onchange="renderTable()" class="px-4 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold outline-none">
+                        <option value="ALL">Tous les Statuts</option>
+                        <option value="PAYE">Payés uniquement</option>
+                        <option value="EN_ATTENTE_DE_PAIEMENT">En attente uniquement</option>
+                        <option value="EN_COURS">En cours de conception</option>
+                        <option value="LIVRE">Livrées</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase font-bold text-slate-500">
+                            <th class="p-4">N° Facture / Date</th>
+                            <th class="p-4">Entreprise & Ville</th>
+                            <th class="p-4">Contact WhatsApp</th>
+                            <th class="p-4">Montant Total</th>
+                            <th class="p-4">Statut BDD</th>
+                            <th class="p-4">Mode Paiement</th>
+                            <th class="p-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody" class="divide-y divide-slate-100 text-slate-700">
+                        <!-- Rempli en JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let allOrders = [];
+
+        async function fetchOrders() {
+            const token = localStorage.getItem('landigo_admin_token');
+            try {
+                const res = await fetch('/api/admin/orders', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (res.status === 401 || res.status === 403) {
+                    logout();
+                    return;
+                }
+                const data = await res.json();
+                if (data.success) {
+                    allOrders = data.orders;
+                    updateStats();
+                    renderTable();
+                }
+            } catch (e) {
+                console.error('Erreur chargement BDD orders:', e);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('landigo_admin_token');
+            window.location.href = '/admin-login';
+        }
+
+        function updateStats() {
+            document.getElementById('statTotalOrders').innerText = allOrders.length;
+            const paid = allOrders.filter(o => o.status === 'PAYE' || o.status === 'EN_COURS' || o.status === 'LIVRE');
+            const pending = allOrders.filter(o => o.status === 'EN_ATTENTE_DE_PAIEMENT');
+            document.getElementById('statPaidOrders').innerText = paid.length;
+            document.getElementById('statPendingOrders').innerText = pending.length;
+
+            const rev = paid.reduce((sum, o) => sum + (o.total_fcfa || 0), 0);
+            document.getElementById('statTotalRevenue').innerText = rev.toLocaleString('fr-FR') + ' FCFA';
+        }
+
+        function renderTable() {
+            const filter = document.getElementById('statusFilter').value;
+            const tbody = document.getElementById('ordersTableBody');
+            tbody.innerHTML = '';
+
+            const filtered = allOrders.filter(o => {
+                if (filter === 'ALL') return true;
+                return o.status === filter;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400">Aucune commande enregistrée pour l'instant dans la base de données.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(o => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50/80 transition';
+
+                let statusBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-700">En attente</span>`;
+                if (o.status === 'PAYE') {
+                    statusBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-700">Payé ✅</span>`;
+                } else if (o.status === 'EN_COURS') {
+                    statusBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-700">En cours 🛠️</span>`;
+                } else if (o.status === 'LIVRE') {
+                    statusBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-purple-100 text-purple-700">Livré 🎉</span>`;
+                }
+
+                const cleanPhone = (o.whatsapp || '').replace(/[^0-9]/g, '');
+                const waMessage = encodeURIComponent(`Bonjour ! L'équipe Landigo Express vous remercie pour votre commande ${o.invoice_number} pour ${o.company_name}.`);
+
+                tr.innerHTML = `
+                    <td class="p-4 font-mono font-bold text-slate-900">
+                        ${o.invoice_number}
+                        <div class="text-xs font-sans text-slate-400 font-normal">${o.created_at}</div>
+                    </td>
+                    <td class="p-4">
+                        <div class="font-bold text-slate-900">${o.company_name}</div>
+                        <div class="text-xs text-slate-500">${o.sector} • ${o.city_country}</div>
+                    </td>
+                    <td class="p-4 font-medium text-slate-700">
+                        ${o.whatsapp}
+                    </td>
+                    <td class="p-4 font-extrabold text-orange-600">
+                        ${(o.total_fcfa || 0).toLocaleString('fr-FR')} FCFA
+                    </td>
+                    <td class="p-4">${statusBadge}</td>
+                    <td class="p-4 text-xs font-medium text-slate-600">
+                        ${o.payment_method ? (o.payment_method + ' (' + (o.payment_phone || '') + ')') : 'Non spécifié'}
+                    </td>
+                    <td class="p-4 text-right space-x-2">
+                        <a href="https://wa.me/${cleanPhone}?text=${waMessage}" target="_blank" class="px-2.5 py-1.5 bg-emerald-500 text-white rounded-lg text-xs font-bold hover:bg-emerald-600 transition inline-flex items-center">
+                            <i class="fa-brands fa-whatsapp mr-1"></i> Contacter
+                        </a>
+                        <select onchange="updateOrderStatus('${o.id}', this.value)" class="px-2 py-1 bg-slate-100 border border-slate-300 text-xs font-bold rounded-lg outline-none">
+                            <option value="EN_ATTENTE_DE_PAIEMENT" ${o.status === 'EN_ATTENTE_DE_PAIEMENT' ? 'selected' : ''}>En attente</option>
+                            <option value="PAYE" ${o.status === 'PAYE' ? 'selected' : ''}>Marquer Payé</option>
+                            <option value="EN_COURS" ${o.status === 'EN_COURS' ? 'selected' : ''}>En Conception</option>
+                            <option value="LIVRE" ${o.status === 'LIVRE' ? 'selected' : ''}>Livré</option>
+                        </select>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function updateOrderStatus(id, newStatus) {
+            const token = localStorage.getItem('landigo_admin_token');
+            try {
+                const res = await fetch('/api/admin/update_status', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ id, status: newStatus })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    fetchOrders();
+                }
+            } catch (e) {
+                alert('Erreur de mise à jour du statut.');
+            }
+        }
+
+        fetchOrders();
+    </script>
+</body>
+</html>

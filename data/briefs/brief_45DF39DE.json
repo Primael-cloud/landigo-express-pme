@@ -1,0 +1,21 @@
+{
+  "id": "45DF39DE",
+  "invoice_number": "FAC-LANDIGO-2026-45DF39DE",
+  "created_at": "09/09/2026 13:56",
+  "company_name": "Test Landigo",
+  "sector": "Services & Conseil",
+  "whatsapp": "+2250700000000",
+  "city_country": "Abidjan",
+  "items": [
+    {
+      "description": "Conception & Design Landing Page Sur-Mesure TPE/PME (Responsive & SEO de base)",
+      "amount": 45000
+    },
+    {
+      "description": "Intégration Bouton WhatsApp Direct & Conversion Client",
+      "amount": 10000
+    }
+  ],
+  "total_fcfa": 55000,
+  "status": "EN_ATTENTE_DE_PAIEMENT"
+}

@@ -1,0 +1,18 @@
+{
+  "id": "42FB75BA",
+  "invoice_number": "FAC-LANDIGO-2026-42FB75BA",
+  "created_at": "09/09/2026 13:57",
+  "company_name": "Test Email Landigo",
+  "sector": "Services & Conseil",
+  "whatsapp": "+2250700000000",
+  "email": "client@example.com",
+  "city_country": "Abidjan",
+  "items": [
+    {
+      "description": "Conception & Design Landing Page Sur-Mesure TPE/PME (Responsive & SEO de base)",
+      "amount": 45000
+    }
+  ],
+  "total_fcfa": 45000,
+  "status": "EN_ATTENTE_DE_PAIEMENT"
+}
