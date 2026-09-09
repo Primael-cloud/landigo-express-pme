@@ -5,15 +5,19 @@
       "dest": "/api/index.py"
     },
     {
-      "handle": "filesystem"
+      "src": "/",
+      "dest": "/index.html"
     },
     {
-      "src": "/admin-login",
+      "src": "/admin-login/?",
       "dest": "/admin_login.html"
     },
     {
-      "src": "/admin",
+      "src": "/admin/?",
       "dest": "/admin.html"
+    },
+    {
+      "handle": "filesystem"
     }
   ]
 }
