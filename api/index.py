@@ -43,6 +43,22 @@ def init_db():
 init_db()
 
 class handler(http.server.BaseHTTPRequestHandler):
+    def send_image_file(self, filename):
+        file_path = os.path.join(BASE_DIR, 'public', filename)
+        try:
+            with open(file_path, 'rb') as image_file:
+                content = image_file.read()
+        except OSError:
+            self.send_json({"error": "Image introuvable"}, status=404)
+            return
+
+        self.send_response(200)
+        self.send_header('Content-Type', 'image/jpeg')
+        self.send_header('Content-Length', str(len(content)))
+        self.send_header('Cache-Control', 'public, max-age=86400')
+        self.end_headers()
+        self.wfile.write(content)
+
     def send_html_file(self, filename):
         file_path = os.path.join(BASE_DIR, filename)
         try:
@@ -82,7 +98,9 @@ class handler(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self):
         parsed_url = urllib.parse.urlparse(self.path)
-        if parsed_url.path == '/':
+        if parsed_url.path == '/logo.jpg':
+            self.send_image_file('logo.jpg')
+        elif parsed_url.path == '/':
             self.send_html_file('index.html')
         elif parsed_url.path in ('/admin-login', '/admin-login/'):
             self.send_html_file('admin_login.html')

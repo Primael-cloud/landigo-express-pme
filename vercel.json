@@ -17,6 +17,10 @@
       "dest": "/admin.html"
     },
     {
+      "src": "/logo.jpg",
+      "dest": "/api/index.py"
+    },
+    {
       "handle": "filesystem"
     }
   ]
