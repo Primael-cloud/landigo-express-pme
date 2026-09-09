@@ -1,16 +1,19 @@
 {
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/index.py"
+      "src": "/api/(.*)",
+      "dest": "/api/index.py"
     },
     {
-      "source": "/admin-login",
-      "destination": "/admin_login.html"
+      "handle": "filesystem"
     },
     {
-      "source": "/admin",
-      "destination": "/admin.html"
+      "src": "/admin-login",
+      "dest": "/admin_login.html"
+    },
+    {
+      "src": "/admin",
+      "dest": "/admin.html"
     }
   ]
 }
