@@ -43,6 +43,21 @@ def init_db():
 init_db()
 
 class handler(http.server.BaseHTTPRequestHandler):
+    def send_html_file(self, filename):
+        file_path = os.path.join(BASE_DIR, filename)
+        try:
+            with open(file_path, 'rb') as html_file:
+                content = html_file.read()
+        except OSError:
+            self.send_json({"error": "Page introuvable"}, status=404)
+            return
+
+        self.send_response(200)
+        self.send_header('Content-Type', 'text/html; charset=utf-8')
+        self.send_header('Content-Length', str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
     def is_authenticated(self):
         auth_header = self.headers.get('Authorization', '')
         token = auth_header.replace('Bearer ', '').strip()
@@ -67,7 +82,13 @@ class handler(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self):
         parsed_url = urllib.parse.urlparse(self.path)
-        if parsed_url.path == '/api/admin/orders':
+        if parsed_url.path == '/':
+            self.send_html_file('index.html')
+        elif parsed_url.path in ('/admin-login', '/admin-login/'):
+            self.send_html_file('admin_login.html')
+        elif parsed_url.path in ('/admin', '/admin/'):
+            self.send_html_file('admin.html')
+        elif parsed_url.path == '/api/admin/orders':
             if not self.is_authenticated():
                 self.send_json({"error": "Non autorise"}, status=401)
                 return
