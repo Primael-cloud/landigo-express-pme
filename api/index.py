@@ -6,6 +6,25 @@ import urllib.parse
 import uuid
 from datetime import datetime
 
+try:
+    from .supabase_client import (
+        get_order as supabase_get_order,
+        get_order_by_invoice as supabase_get_order_by_invoice,
+        insert_order as supabase_insert_order,
+        is_enabled as supabase_enabled,
+        list_orders as supabase_list_orders,
+        update_order as supabase_update_order,
+    )
+except ImportError:
+    from supabase_client import (
+        get_order as supabase_get_order,
+        get_order_by_invoice as supabase_get_order_by_invoice,
+        insert_order as supabase_insert_order,
+        is_enabled as supabase_enabled,
+        list_orders as supabase_list_orders,
+        update_order as supabase_update_order,
+    )
+
 # In serverless environments (Vercel), writeable data goes to /tmp or remote DB (Supabase)
 IS_VERCEL = os.environ.get('VERCEL', '0') == '1'
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -41,6 +60,108 @@ def init_db():
     conn.close()
 
 init_db()
+
+
+def order_response(row):
+    if isinstance(row, sqlite3.Row):
+        return {
+            "id": row["id"],
+            "invoice_number": row["invoice_number"],
+            "created_at": row["created_at"],
+            "company_name": row["company_name"],
+            "sector": row["sector"],
+            "whatsapp": row["whatsapp"],
+            "city_country": row["city_country"],
+            "options": json.loads(row["options_json"]) if row["options_json"] else [],
+            "items": json.loads(row["items_json"]) if row["items_json"] else [],
+            "total_fcfa": row["total_fcfa"],
+            "status": row["status"],
+            "payment_method": row["payment_method"],
+            "payment_phone": row["payment_phone"],
+            "transaction_id": row["transaction_id"],
+            "paid_at": row["paid_at"]
+        }
+
+    return {
+        "id": row.get("id"),
+        "invoice_number": row.get("invoice_number"),
+        "created_at": row.get("created_at"),
+        "company_name": row.get("company_name"),
+        "sector": row.get("sector"),
+        "whatsapp": row.get("whatsapp"),
+        "city_country": row.get("city_country"),
+        "options": row.get("options_json", []),
+        "items": row.get("items_json", []),
+        "total_fcfa": row.get("total_fcfa"),
+        "status": row.get("status"),
+        "payment_method": row.get("payment_method"),
+        "payment_phone": row.get("payment_phone"),
+        "transaction_id": row.get("transaction_id"),
+        "paid_at": row.get("paid_at")
+    }
+
+
+def insert_order(order):
+    if supabase_enabled():
+        supabase_insert_order({
+            **order,
+            "options_json": order["options"],
+            "items_json": order["items"]
+        })
+        return
+
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO orders (id, invoice_number, created_at, company_name, sector, whatsapp, email, city_country, options_json, items_json, total_fcfa, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (
+        order["id"], order["invoice_number"], order["created_at"], order["company_name"],
+        order["sector"], order["whatsapp"], order["email"], order["city_country"],
+        json.dumps(order["options"]), json.dumps(order["items"]), order["total_fcfa"], order["status"]
+    ))
+    conn.commit()
+    conn.close()
+
+
+def update_order(order_id, updates):
+    if supabase_enabled():
+        return supabase_update_order(order_id, updates)
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    assignments = ", ".join(f"{key} = ?" for key in updates)
+    cursor.execute(f"UPDATE orders SET {assignments} WHERE id = ?", (*updates.values(), order_id))
+    conn.commit()
+    cursor.execute("SELECT * FROM orders WHERE id = ?", (order_id,))
+    row = cursor.fetchone()
+    conn.close()
+    return row
+
+
+def get_order(order_id):
+    if supabase_enabled():
+        return supabase_get_order(order_id)
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM orders WHERE id = ?", (order_id,))
+    row = cursor.fetchone()
+    conn.close()
+    return row
+
+
+def list_orders():
+    if supabase_enabled():
+        return supabase_list_orders()
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM orders ORDER BY created_at DESC")
+    rows = cursor.fetchall()
+    conn.close()
+    return rows
 
 class handler(http.server.BaseHTTPRequestHandler):
     def send_image_file(self, filename):
@@ -191,25 +312,20 @@ class handler(http.server.BaseHTTPRequestHandler):
 
         now_str = datetime.now().strftime("%d/%m/%Y %H:%M")
 
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        cursor.execute('''
-            INSERT INTO orders (id, invoice_number, created_at, company_name, sector, whatsapp, email, city_country, options_json, items_json, total_fcfa, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            ref_id, invoice_num, now_str,
-            data.get("company_name", "N/A"),
-            data.get("sector", "N/A"),
-            data.get("whatsapp", "N/A"),
-            data.get("email", "N/A"),
-            data.get("city_country", "Abidjan, Côte d'Ivoire"),
-            json.dumps(options),
-            json.dumps(items),
-            total,
-            "EN_ATTENTE_DE_PAIEMENT"
-        ))
-        conn.commit()
-        conn.close()
+        insert_order({
+            "id": ref_id,
+            "invoice_number": invoice_num,
+            "created_at": now_str,
+            "company_name": data.get("company_name", "N/A"),
+            "sector": data.get("sector", "N/A"),
+            "whatsapp": data.get("whatsapp", "N/A"),
+            "email": data.get("email", "N/A"),
+            "city_country": data.get("city_country", "Abidjan, Côte d'Ivoire"),
+            "options": options,
+            "items": items,
+            "total_fcfa": total,
+            "status": "EN_ATTENTE_DE_PAIEMENT"
+        })
 
         brief_record = {
             "id": ref_id,
@@ -237,36 +353,16 @@ class handler(http.server.BaseHTTPRequestHandler):
         tx_id = f"CNP-{uuid.uuid4().hex[:10].upper()}"
         now_str = datetime.now().strftime("%d/%m/%Y %H:%M")
 
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        cursor.execute('''
-            UPDATE orders 
-            SET status = 'PAYE', payment_method = ?, payment_phone = ?, transaction_id = ?, paid_at = ?
-            WHERE id = ?
-        ''', (method, phone, tx_id, now_str, ref_id))
-        conn.commit()
-        
-        cursor.execute("SELECT * FROM orders WHERE id = ?", (ref_id,))
-        row = cursor.fetchone()
-        conn.close()
+        row = update_order(ref_id, {
+            "status": "PAYE",
+            "payment_method": method,
+            "payment_phone": phone,
+            "transaction_id": tx_id,
+            "paid_at": now_str
+        })
 
         if row:
-            record = {
-                "id": row[0],
-                "invoice_number": row[1],
-                "created_at": row[2],
-                "company_name": row[3],
-                "sector": row[4],
-                "whatsapp": row[5],
-                "city_country": row[7],
-                "items": json.loads(row[9]),
-                "total_fcfa": row[10],
-                "status": row[11],
-                "payment_method": row[12],
-                "payment_phone": row[13],
-                "transaction_id": row[14],
-                "paid_at": row[15]
-            }
+            record = order_response(row)
             self.send_json({
                 "success": True,
                 "message": f"Paiement de {record['total_fcfa']:,} FCFA validé via {method} !",
@@ -281,56 +377,28 @@ class handler(http.server.BaseHTTPRequestHandler):
         cpay_status = data.get("status") or data.get("cpay_status")
 
         if cpay_trans_id and cpay_status in ["ACCEPTED", "SUCCES", "SUCCESS", "PAYE"]:
-            conn = sqlite3.connect(DB_PATH)
-            cursor = conn.cursor()
             now_str = datetime.now().strftime("%d/%m/%Y %H:%M")
-            cursor.execute('''
-                UPDATE orders 
-                SET status = 'PAYE', paid_at = ?, transaction_id = ?
-                WHERE id = ? OR invoice_number = ?
-            ''', (now_str, cpay_trans_id, cpay_trans_id, cpay_trans_id))
-            conn.commit()
-            conn.close()
+            row = get_order(cpay_trans_id)
+            if row is None and supabase_enabled():
+                row = supabase_get_order_by_invoice(cpay_trans_id)
+            if row is not None:
+                order_id = row["id"]
+                update_order(order_id, {
+                    "status": "PAYE",
+                    "paid_at": now_str,
+                    "transaction_id": cpay_trans_id
+                })
 
         self.send_json({"status": "OK", "message": "Notification IPN CinetPay reçue."})
 
     def handle_get_orders(self):
-        conn = sqlite3.connect(DB_PATH)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM orders ORDER BY created_at DESC")
-        rows = cursor.fetchall()
-        conn.close()
-
-        orders = []
-        for r in rows:
-            orders.append({
-                "id": r["id"],
-                "invoice_number": r["invoice_number"],
-                "created_at": r["created_at"],
-                "company_name": r["company_name"],
-                "sector": r["sector"],
-                "whatsapp": r["whatsapp"],
-                "city_country": r["city_country"],
-                "options": json.loads(r["options_json"]) if r["options_json"] else [],
-                "items": json.loads(r["items_json"]) if r["items_json"] else [],
-                "total_fcfa": r["total_fcfa"],
-                "status": r["status"],
-                "payment_method": r["payment_method"],
-                "payment_phone": r["payment_phone"],
-                "transaction_id": r["transaction_id"],
-                "paid_at": r["paid_at"]
-            })
+        orders = [order_response(row) for row in list_orders()]
         self.send_json({"success": True, "orders": orders})
 
     def handle_update_status(self, data):
         ref_id = data.get("id")
         new_status = data.get("status")
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        cursor.execute("UPDATE orders SET status = ? WHERE id = ?", (new_status, ref_id))
-        conn.commit()
-        conn.close()
+        update_order(ref_id, {"status": new_status})
         self.send_json({"success": True, "message": "Statut mis à jour."})
 
     def handle_chat(self, data):

@@ -1,1 +1,2 @@
 # Landigo Express Python Requirements for Vercel
+supabase
