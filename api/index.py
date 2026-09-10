@@ -104,9 +104,18 @@ def order_response(row):
 def insert_order(order):
     if supabase_enabled():
         supabase_insert_order({
-            **order,
+            "id": order["id"],
+            "invoice_number": order["invoice_number"],
+            "created_at": order["created_at"],
+            "company_name": order["company_name"],
+            "sector": order["sector"],
+            "whatsapp": order["whatsapp"],
+            "email": order["email"],
+            "city_country": order["city_country"],
             "options_json": order["options"],
-            "items_json": order["items"]
+            "items_json": order["items"],
+            "total_fcfa": order["total_fcfa"],
+            "status": order["status"]
         })
         return
 

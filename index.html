@@ -569,14 +569,16 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                const result = await res.json();
+                const result = await res.json().catch(() => ({}));
                 if (result.success) {
                     currentBriefData = result.data;
                     renderInvoice(result.data);
                     document.getElementById('invoiceModal').classList.remove('hidden');
+                } else {
+                    alert(result.error || 'Le serveur n’a pas pu enregistrer la facture.');
                 }
             } catch (err) {
-                alert('Erreur de connexion au serveur.');
+                alert('Erreur de connexion au serveur. Vérifiez le déploiement Vercel.');
             }
         }
 
