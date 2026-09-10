@@ -622,15 +622,15 @@
             const source = document.querySelector('#invoiceModal > div');
             const element = source.cloneNode(true);
             element.querySelectorAll('button').forEach(button => button.remove());
-            element.style.position = 'fixed';
-            element.style.left = '0';
+            element.style.position = 'absolute';
+            element.style.left = '-10000px';
             element.style.top = '0';
             element.style.width = '794px';
             element.style.maxWidth = '794px';
             element.style.maxHeight = 'none';
             element.style.overflow = 'visible';
             element.style.visibility = 'visible';
-            element.style.zIndex = '-1';
+            element.style.zIndex = '1000';
             document.body.appendChild(element);
 
             if (document.fonts && document.fonts.ready) {
