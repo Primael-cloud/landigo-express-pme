@@ -175,7 +175,7 @@
                 <!-- Modèle 1 -->
                 <div class="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-md transition">
                     <div class="h-48 bg-gradient-to-r from-blue-600 to-indigo-700 p-6 flex flex-col justify-between text-white">
-                        <span class="px-3 py-1 bg-white/20 backdrop-blur-sm text-xs font-semibold rounded-full w-max">BTP & Services</span>
+                        <span class="px-3 py-1 bg-white/20 backdrop-blur-sm text-xs font-semibold rounded-full w-max">IA - Innovation &amp; Tech</span>
                         <div>
                             <h4 class="text-xl font-bold">Cabinet & Propreté Pro</h4>
                             <p class="text-xs opacity-90">Présentation des prestations, devis rapide</p>
@@ -187,7 +187,7 @@
                             <li><i class="fa-solid fa-check text-emerald-500 mr-2"></i> Bouton d'appel rapide</li>
                             <li><i class="fa-solid fa-check text-emerald-500 mr-2"></i> Avis clients & références</li>
                         </ul>
-                        <button onclick="selectTemplate('BTP & Services')" class="w-full py-2.5 bg-slate-100 hover:bg-orange-500 hover:text-white text-slate-700 font-semibold rounded-lg transition">Choisir ce Style</button>
+                        <a href="https://portfolio-basile-primael.vercel.app/" target="_blank" rel="noopener noreferrer" class="block w-full py-2.5 text-center bg-slate-100 hover:bg-orange-500 hover:text-white text-slate-700 font-semibold rounded-lg transition">Voir le portfolio</a>
                     </div>
                 </div>
 
@@ -545,7 +545,7 @@
 
         function selectTemplate(sector) {
             scrollToBrief();
-            document.getElementById('sector').value = sector === 'Restauration' ? 'Restauration & Alimentation' : (sector === 'BTP & Services' ? 'BTP & Construction' : 'Commerce & Boutiques');
+            document.getElementById('sector').value = sector === 'Restauration' ? 'Restauration & Alimentation' : (sector === 'IA - Innovation & Tech' ? 'Services & Conseil' : 'Commerce & Boutiques');
         }
 
         async function submitBrief(e) {
