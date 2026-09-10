@@ -1,62 +1,58 @@
+import json
 import os
-from supabase import Client, create_client
+import urllib.error
+import urllib.parse
+import urllib.request
 
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "").strip()
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "").strip().rstrip("/")
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+TABLE_URL = f"{SUPABASE_URL}/rest/v1/orders" if SUPABASE_URL and SUPABASE_KEY else ""
 
 
-_client: Client | None = None
+def is_enabled():
+    return bool(TABLE_URL)
 
 
-def get_client() -> Client | None:
-    global _client
-    if not SUPABASE_URL or not SUPABASE_KEY:
-        return None
-    if _client is None:
-        _client = create_client(SUPABASE_URL, SUPABASE_KEY)
-    return _client
+def request(method, query="", payload=None):
+    body = None if payload is None else json.dumps(payload).encode("utf-8")
+    request_data = urllib.request.Request(TABLE_URL + query, data=body, method=method)
+    request_data.add_header("apikey", SUPABASE_KEY)
+    request_data.add_header("Authorization", f"Bearer {SUPABASE_KEY}")
+    request_data.add_header("Content-Type", "application/json")
+    request_data.add_header("Prefer", "return=representation")
+
+    try:
+        with urllib.request.urlopen(request_data, timeout=15) as response:
+            content = response.read().decode("utf-8")
+            return json.loads(content) if content else []
+    except urllib.error.HTTPError as error:
+        details = error.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"Supabase HTTP {error.code}: {details}") from error
 
 
-def is_enabled() -> bool:
-    return get_client() is not None
+def insert_order(order):
+    rows = request("POST", payload=order)
+    return rows[0] if rows else order
 
 
-def insert_order(order: dict) -> dict:
-    client = get_client()
-    if client is None:
-        raise RuntimeError("SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY sont requis")
-    response = client.table("orders").insert(order).execute()
-    return response.data[0] if response.data else order
+def update_order(order_id, updates):
+    query = f"?id=eq.{urllib.parse.quote(order_id, safe='')}"
+    rows = request("PATCH", query=query, payload=updates)
+    return rows[0] if rows else None
 
 
-def update_order(order_id: str, updates: dict) -> dict | None:
-    client = get_client()
-    if client is None:
-        raise RuntimeError("SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY sont requis")
-    response = client.table("orders").update(updates).eq("id", order_id).execute()
-    return response.data[0] if response.data else None
+def get_order(order_id):
+    query = f"?id=eq.{urllib.parse.quote(order_id, safe='')}&limit=1"
+    rows = request("GET", query=query)
+    return rows[0] if rows else None
 
 
-def get_order(order_id: str) -> dict | None:
-    client = get_client()
-    if client is None:
-        raise RuntimeError("SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY sont requis")
-    response = client.table("orders").select("*").eq("id", order_id).limit(1).execute()
-    return response.data[0] if response.data else None
+def get_order_by_invoice(invoice_number):
+    query = f"?invoice_number=eq.{urllib.parse.quote(invoice_number, safe='')}&limit=1"
+    rows = request("GET", query=query)
+    return rows[0] if rows else None
 
 
-def get_order_by_invoice(invoice_number: str) -> dict | None:
-    client = get_client()
-    if client is None:
-        raise RuntimeError("SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY sont requis")
-    response = client.table("orders").select("*").eq("invoice_number", invoice_number).limit(1).execute()
-    return response.data[0] if response.data else None
-
-
-def list_orders() -> list[dict]:
-    client = get_client()
-    if client is None:
-        raise RuntimeError("SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY sont requis")
-    response = client.table("orders").select("*").order("created_at", desc=True).execute()
-    return response.data or []
+def list_orders():
+    return request("GET", query="?select=*&order=created_at.desc")
