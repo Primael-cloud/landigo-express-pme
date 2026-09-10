@@ -321,20 +321,25 @@ class handler(http.server.BaseHTTPRequestHandler):
 
         now_str = datetime.now().strftime("%d/%m/%Y %H:%M")
 
-        insert_order({
-            "id": ref_id,
-            "invoice_number": invoice_num,
-            "created_at": now_str,
-            "company_name": data.get("company_name", "N/A"),
-            "sector": data.get("sector", "N/A"),
-            "whatsapp": data.get("whatsapp", "N/A"),
-            "email": data.get("email", "N/A"),
-            "city_country": data.get("city_country", "Abidjan, Côte d'Ivoire"),
-            "options": options,
-            "items": items,
-            "total_fcfa": total,
-            "status": "EN_ATTENTE_DE_PAIEMENT"
-        })
+        try:
+            insert_order({
+                "id": ref_id,
+                "invoice_number": invoice_num,
+                "created_at": now_str,
+                "company_name": data.get("company_name", "N/A"),
+                "sector": data.get("sector", "N/A"),
+                "whatsapp": data.get("whatsapp", "N/A"),
+                "email": data.get("email", "N/A"),
+                "city_country": data.get("city_country", "Abidjan, Côte d'Ivoire"),
+                "options": options,
+                "items": items,
+                "total_fcfa": total,
+                "status": "EN_ATTENTE_DE_PAIEMENT"
+            })
+        except Exception as error:
+            print(f"Erreur création commande: {error}")
+            self.send_json({"error": f"Erreur Supabase: {error}"}, status=502)
+            return
 
         brief_record = {
             "id": ref_id,
