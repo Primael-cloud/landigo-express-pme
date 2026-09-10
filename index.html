@@ -616,40 +616,53 @@
             document.getElementById('invoiceModal').classList.add('hidden');
         }
 
-        async function downloadPDF() {
+        function downloadPDF() {
             if (!currentBriefData) return;
 
             const source = document.querySelector('#invoiceModal > div');
             const element = source.cloneNode(true);
             element.querySelectorAll('button').forEach(button => button.remove());
-            element.style.position = 'absolute';
-            element.style.left = '-10000px';
-            element.style.top = '0';
-            element.style.width = '794px';
-            element.style.maxWidth = '794px';
+            element.querySelectorAll('[onclick]').forEach(node => node.removeAttribute('onclick'));
+            element.classList.remove('max-h-[90vh]', 'overflow-y-auto', 'relative', 'my-8');
             element.style.maxHeight = 'none';
             element.style.overflow = 'visible';
-            element.style.visibility = 'visible';
-            element.style.zIndex = '1000';
-            document.body.appendChild(element);
+            element.style.boxShadow = 'none';
 
-            if (document.fonts && document.fonts.ready) {
-                await document.fonts.ready;
+            const printWindow = window.open('', '_blank', 'width=900,height=1000');
+            if (!printWindow) {
+                alert('Autorisez les fenêtres contextuelles pour imprimer la facture.');
+                return;
             }
 
-            const opt = {
-                margin:       0.3,
-                filename:     currentBriefData.invoice_number + '.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
-                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            printWindow.document.write(`<!DOCTYPE html>
+                <html lang="fr">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>${currentBriefData.invoice_number}</title>
+                    <script src="https://cdn.tailwindcss.com"><\/script>
+                    <style>
+                        @media print {
+                            @page { size: A4; margin: 12mm; }
+                            body { background: #ffffff !important; }
+                            .invoice-print { box-shadow: none !important; max-width: none !important; }
+                        }
+                        body { margin: 0; background: #ffffff; }
+                    </style>
+                </head>
+                <body><main class="invoice-print">${element.outerHTML}</main></body>
+                </html>`);
+            printWindow.document.close();
+            printWindow.focus();
+            let hasPrinted = false;
+            const printInvoice = () => {
+                if (hasPrinted) return;
+                hasPrinted = true;
+                printWindow.print();
             };
-
-            try {
-                await html2pdf().set(opt).from(element).save();
-            } finally {
-                element.remove();
-            }
+            printWindow.onload = () => {
+                setTimeout(printInvoice, 800);
+            };
+            setTimeout(printInvoice, 1800);
         }
 
         function openPaymentModal() {
