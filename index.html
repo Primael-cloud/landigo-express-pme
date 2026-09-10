@@ -616,17 +616,40 @@
             document.getElementById('invoiceModal').classList.add('hidden');
         }
 
-        function downloadPDF() {
+        async function downloadPDF() {
             if (!currentBriefData) return;
-            const element = document.querySelector('#invoiceModal > div');
+
+            const source = document.querySelector('#invoiceModal > div');
+            const element = source.cloneNode(true);
+            element.querySelectorAll('button').forEach(button => button.remove());
+            element.style.position = 'fixed';
+            element.style.left = '0';
+            element.style.top = '0';
+            element.style.width = '794px';
+            element.style.maxWidth = '794px';
+            element.style.maxHeight = 'none';
+            element.style.overflow = 'visible';
+            element.style.visibility = 'visible';
+            element.style.zIndex = '-1';
+            document.body.appendChild(element);
+
+            if (document.fonts && document.fonts.ready) {
+                await document.fonts.ready;
+            }
+
             const opt = {
-                margin:       0.5,
+                margin:       0.3,
                 filename:     currentBriefData.invoice_number + '.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 },
+                html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
                 jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
             };
-            html2pdf().set(opt).from(element).save();
+
+            try {
+                await html2pdf().set(opt).from(element).save();
+            } finally {
+                element.remove();
+            }
         }
 
         function openPaymentModal() {
