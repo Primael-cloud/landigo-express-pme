@@ -5,8 +5,14 @@ import urllib.parse
 import urllib.request
 
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "").strip().rstrip("/")
-SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "").strip().strip('"').strip("'").rstrip("/")
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip().strip('"').strip("'")
+
+for suffix in ("/rest/v1/orders", "/rest/v1", "/"):
+    if SUPABASE_URL.endswith(suffix):
+        SUPABASE_URL = SUPABASE_URL[:-len(suffix)].rstrip("/")
+        break
+
 TABLE_URL = f"{SUPABASE_URL}/rest/v1/orders" if SUPABASE_URL and SUPABASE_KEY else ""
 
 
