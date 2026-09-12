@@ -17,11 +17,23 @@ Pour activer l'envoi email, ajoutez ces variables d'environnement dans Render ou
 SMTP_HOST=smtp-relay.brevo.com
 SMTP_PORT=587
 SMTP_USERNAME=b90af3001@smtp-brevo.com
-SMTP_PASSWORD=xsmtpsib-9434f23efa60d217a328ee26f897d710f49ab737935ae96d8a46d25808618384-fwCN7aahG1ViJX9I
+SMTP_PASSWORD=xsmtpsib-9434f23efa60d217a328ee26f897d710f49ab737935ae96d8a46d25808618384-INtCzICiizHV3GCv
 NOTIFICATION_FROM=yangbasile@gmail.com
 ```
 
 Sans ces variables, le statut est bien mis à jour mais aucun email ne peut être envoyé. Le bouton WhatsApp reste disponible dans l'administration pour contacter manuellement le client.
+
+Après avoir ajouté la table `notifications` dans `supabase_schema.sql`, l'historique est également conservé dans Supabase et reste consultable depuis l'administration après un redéploiement.
+
+Pour envoyer automatiquement les notifications par WhatsApp lorsqu'aucun email n'est fourni, configurez aussi Meta WhatsApp Cloud API :
+
+```text
+WHATSAPP_API_VERSION=v21.0
+WHATSAPP_PHONE_NUMBER_ID=votre-identifiant-de-numero-meta
+WHATSAPP_ACCESS_TOKEN=votre-jeton-meta
+```
+
+Le numéro doit être au format international, par exemple `2250700000000`. Hors de la fenêtre de 24 heures, Meta exige généralement un modèle WhatsApp approuvé. Révoquez toute clé SMTP exposée dans ce fichier et remplacez-la.
 ### Procédure en 5 clics :
 1. Créez un compte gratuit sur [Render.com](https://render.com).
 2. Déposez ce dossier `landigo-pme` sur votre compte **GitHub** (ou GitLab).

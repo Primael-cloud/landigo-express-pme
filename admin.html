@@ -107,10 +107,49 @@
                 </table>
             </div>
         </div>
+
+        <div class="mt-8 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-slate-200 flex items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-lg font-extrabold text-slate-900">Historique des notifications</h2>
+                    <p class="text-xs text-slate-500">Emails envoyés aux clients et tentatives échouées.</p>
+                </div>
+                <button onclick="fetchNotifications()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition"><i class="fa-solid fa-rotate mr-1"></i> Actualiser</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead><tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase font-bold text-slate-500">
+                        <th class="p-4">Date</th><th class="p-4">Facture</th><th class="p-4">Canal</th><th class="p-4">Destinataire</th><th class="p-4">Objet</th><th class="p-4">Statut</th>
+                    </tr></thead>
+                    <tbody id="notificationsTableBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
+                </table>
+            </div>
+        </div>
     </main>
 
     <script>
         let allOrders = [];
+
+        async function fetchNotifications() {
+            const token = localStorage.getItem('landigo_admin_token');
+            try {
+                const res = await fetch('/api/admin/notifications', { headers: { 'Authorization': 'Bearer ' + token } });
+                const data = await res.json();
+                const tbody = document.getElementById('notificationsTableBody');
+                tbody.innerHTML = '';
+                if (!data.success || data.notifications.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400">Aucune notification enregistrée.</td></tr>';
+                    return;
+                }
+                data.notifications.forEach(notification => {
+                    const statusClass = notification.status === 'ENVOYE' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700';
+                    const statusLabel = notification.status === 'ENVOYE' ? 'Envoyé' : 'Échec';
+                    tbody.innerHTML += `<tr><td class="p-4 text-xs text-slate-500">${notification.created_at}</td><td class="p-4 font-mono text-xs font-bold">${notification.invoice_number || '-'}</td><td class="p-4">${notification.channel || 'EMAIL'}</td><td class="p-4">${notification.recipient || '-'}</td><td class="p-4">${notification.subject}</td><td class="p-4"><span class="px-2.5 py-1 text-xs font-bold rounded-full ${statusClass}">${statusLabel}</span></td></tr>`;
+                });
+            } catch (e) {
+                console.error('Erreur chargement historique notifications:', e);
+            }
+        }
 
         async function fetchOrders() {
             const token = localStorage.getItem('landigo_admin_token');
@@ -230,7 +269,7 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    if (data.notification && !data.notification.email_sent) {
+                    if (data.notification && !data.notification.email_sent && !data.notification.whatsapp_sent) {
                         console.info('Notification email non envoyée:', data.notification.reason);
                     }
                     fetchOrders();
@@ -241,6 +280,7 @@
         }
 
         fetchOrders();
+        fetchNotifications();
     </script>
 </body>
 </html>

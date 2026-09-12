@@ -15,6 +15,8 @@ try:
         insert_order as supabase_insert_order,
         is_enabled as supabase_enabled,
         list_orders as supabase_list_orders,
+        insert_notification as supabase_insert_notification,
+        list_notifications as supabase_list_notifications,
         update_order as supabase_update_order,
     )
 except ImportError:
@@ -24,6 +26,8 @@ except ImportError:
         insert_order as supabase_insert_order,
         is_enabled as supabase_enabled,
         list_orders as supabase_list_orders,
+        insert_notification as supabase_insert_notification,
+        list_notifications as supabase_list_notifications,
         update_order as supabase_update_order,
     )
 
@@ -66,11 +70,60 @@ def init_db():
         cursor.execute("ALTER TABLE orders ADD COLUMN payment_status TEXT")
     if "project_status" not in columns:
         cursor.execute("ALTER TABLE orders ADD COLUMN project_status TEXT")
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS notifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            order_id TEXT,
+            invoice_number TEXT,
+            channel TEXT NOT NULL DEFAULT 'EMAIL',
+            recipient TEXT,
+            subject TEXT NOT NULL,
+            message TEXT NOT NULL,
+            status TEXT NOT NULL,
+            error_message TEXT,
+            created_at TEXT NOT NULL
+        )
+    ''')
+    notification_columns = {row[1] for row in cursor.execute("PRAGMA table_info(notifications)").fetchall()}
+    if "channel" not in notification_columns:
+        cursor.execute("ALTER TABLE notifications ADD COLUMN channel TEXT DEFAULT 'EMAIL'")
     cursor.execute("UPDATE orders SET payment_status = CASE WHEN status IN ('PAYE', 'EN_COURS', 'LIVRE') THEN 'PAYE' ELSE 'EN_ATTENTE_DE_PAIEMENT' END WHERE payment_status IS NULL")
     cursor.execute("UPDATE orders SET project_status = CASE WHEN status = 'EN_COURS' THEN 'EN_COURS' WHEN status = 'LIVRE' THEN 'LIVRE' ELSE 'NON_DEMARRE' END WHERE project_status IS NULL")
     conn.close()
 
 init_db()
+
+
+def record_notification(order, subject, message, result):
+    status = "ENVOYE" if result.get("email_sent") else "ECHEC"
+    record = {
+        "order_id": order.get("id"),
+        "invoice_number": order.get("invoice_number"),
+        "channel": result.get("channel", "EMAIL"),
+        "recipient": result.get("recipient") or order.get("email") or order.get("whatsapp"),
+        "subject": subject,
+        "message": message,
+        "status": status,
+        "error_message": result.get("reason"),
+        "created_at": datetime.now().isoformat(timespec="seconds")
+    }
+    if supabase_enabled():
+        return supabase_insert_notification(record)
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("INSERT INTO notifications (order_id, invoice_number, channel, recipient, subject, message, status, error_message, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", tuple(record.values()))
+    conn.commit()
+    conn.close()
+    return record
+
+
+def list_notifications():
+    if supabase_enabled():
+        return supabase_list_notifications()
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute("SELECT * FROM notifications ORDER BY created_at DESC").fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
 
 
 def order_response(row):
@@ -126,15 +179,20 @@ def parse_datetime(value):
 
 
 def send_client_notification(order, message):
+    subject = f"Mise à jour de votre projet Landigo - {order['invoice_number']}"
     host = os.environ.get("SMTP_HOST", "")
     username = os.environ.get("SMTP_USERNAME", "")
     password = os.environ.get("SMTP_PASSWORD", "")
     recipient = order.get("email")
-    if not host or not username or not password or not recipient or recipient == "N/A":
-        return {"email_sent": False, "reason": "SMTP non configuré ou email client absent"}
+    if not recipient or recipient == "N/A":
+        return send_whatsapp_notification(order, message, subject)
+    if not host or not username or not password:
+        result = {"email_sent": False, "channel": "EMAIL", "reason": "SMTP non configuré"}
+        record_notification(order, subject, message, result)
+        return result
 
     email = EmailMessage()
-    email["Subject"] = f"Mise à jour de votre projet Landigo - {order['invoice_number']}"
+    email["Subject"] = subject
     email["From"] = os.environ.get("NOTIFICATION_FROM") or username
     email["To"] = recipient
     email.set_content(f"Bonjour {order.get('company_name', '')},\n\n{message}\n\nRéférence : {order['invoice_number']}\n\nL'équipe Landigo Express")
@@ -143,10 +201,43 @@ def send_client_notification(order, message):
             smtp.starttls()
             smtp.login(username, password)
             smtp.send_message(email)
-        return {"email_sent": True}
+        result = {"email_sent": True, "channel": "EMAIL", "recipient": recipient}
+        record_notification(order, subject, message, result)
+        return result
     except (OSError, smtplib.SMTPException, ValueError) as error:
         print(f"Erreur notification email: {error}")
-        return {"email_sent": False, "reason": "Échec de l'envoi email"}
+        result = {"email_sent": False, "channel": "EMAIL", "recipient": recipient, "reason": "Échec de l'envoi email"}
+        record_notification(order, subject, message, result)
+        return result
+
+
+def send_whatsapp_notification(order, message, subject):
+    token = os.environ.get("WHATSAPP_ACCESS_TOKEN", "")
+    phone_number_id = os.environ.get("WHATSAPP_PHONE_NUMBER_ID", "")
+    recipient = "".join(char for char in str(order.get("whatsapp", "")) if char.isdigit())
+    result = {"email_sent": False, "whatsapp_sent": False, "channel": "WHATSAPP", "recipient": recipient}
+    if not token or not phone_number_id or not recipient:
+        result["reason"] = "API WhatsApp non configurée ou numéro client absent"
+        record_notification(order, subject, message, result)
+        return result
+    payload = json.dumps({
+        "messaging_product": "whatsapp", "to": recipient, "type": "text",
+        "text": {"preview_url": False, "body": f"Bonjour {order.get('company_name', '')},\n\n{message}\n\nRéférence : {order['invoice_number']}\n\nL'équipe Landigo Express"}
+    }).encode("utf-8")
+    request = urllib.request.Request(
+        f"https://graph.facebook.com/{os.environ.get('WHATSAPP_API_VERSION', 'v21.0')}/{phone_number_id}/messages",
+        data=payload, method="POST")
+    request.add_header("Authorization", f"Bearer {token}")
+    request.add_header("Content-Type", "application/json")
+    try:
+        with urllib.request.urlopen(request, timeout=15):
+            result["email_sent"] = True
+            result["whatsapp_sent"] = True
+    except (OSError, urllib.error.HTTPError) as error:
+        result["reason"] = "Échec de l'envoi WhatsApp"
+        print(f"Erreur notification WhatsApp: {error}")
+    record_notification(order, subject, message, result)
+    return result
 
 
 def project_status_message(status):
@@ -312,6 +403,11 @@ class handler(http.server.BaseHTTPRequestHandler):
                 self.send_json({"error": "Non autorise"}, status=401)
                 return
             self.handle_get_orders()
+        elif parsed_url.path == '/api/admin/notifications':
+            if not self.is_authenticated():
+                self.send_json({"error": "Non autorise"}, status=401)
+                return
+            self.send_json({"success": True, "notifications": list_notifications()})
         else:
             self.send_json({"message": "Landigo Express API Ready on Vercel"})
 

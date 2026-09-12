@@ -14,6 +14,7 @@ for suffix in ("/rest/v1/orders", "/rest/v1", "/"):
         break
 
 TABLE_URL = f"{SUPABASE_URL}/rest/v1/orders" if SUPABASE_URL and SUPABASE_KEY else ""
+NOTIFICATIONS_URL = f"{SUPABASE_URL}/rest/v1/notifications" if SUPABASE_URL and SUPABASE_KEY else ""
 
 
 def is_enabled():
@@ -62,3 +63,28 @@ def get_order_by_invoice(invoice_number):
 
 def list_orders():
     return request("GET", query="?select=*&order=created_at.desc")
+
+
+def notification_request(method, query="", payload=None):
+    body = None if payload is None else json.dumps(payload).encode("utf-8")
+    request_data = urllib.request.Request(NOTIFICATIONS_URL + query, data=body, method=method)
+    request_data.add_header("apikey", SUPABASE_KEY)
+    request_data.add_header("Authorization", f"Bearer {SUPABASE_KEY}")
+    request_data.add_header("Content-Type", "application/json")
+    request_data.add_header("Prefer", "return=representation")
+    try:
+        with urllib.request.urlopen(request_data, timeout=15) as response:
+            content = response.read().decode("utf-8")
+            return json.loads(content) if content else []
+    except urllib.error.HTTPError as error:
+        details = error.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"Supabase notifications HTTP {error.code}: {details}") from error
+
+
+def insert_notification(notification):
+    rows = notification_request("POST", payload=notification)
+    return rows[0] if rows else notification
+
+
+def list_notifications():
+    return notification_request("GET", query="?select=*&order=created_at.desc")
