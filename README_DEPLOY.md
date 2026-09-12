@@ -2,12 +2,26 @@
 
 Ce guide vous explique comment mettre en ligne votre plateforme **Landigo Express** dès aujourd'hui sur le Cloud, puis comment la lier à votre nom de domaine personnalisé **`landigo-express.com`** une fois acheté.
 
----
 
 ## ÉTAPE 1 : Déployer Gratuitement sur Render.com (Aujourd'hui)
 
 Vous pouvez déployer votre application immédiatement sans dépenser un centime. Render vous fournira un lien temporaire sécurisé HTTPS (ex: `https://landigo-express.onrender.com`).
 
+### Notifications de suivi projet
+
+Le paiement et l'avancement du projet sont enregistrés séparément. Après 24 heures suivant la confirmation du paiement, le projet passe automatiquement à `EN_COURS` lors du prochain chargement de l'administration. Les changements vers `EN_COURS`, `LIVRE` ou `PROBLEME` déclenchent un email au client.
+
+Pour activer l'envoi email, ajoutez ces variables d'environnement dans Render ou Vercel :
+
+```text
+SMTP_HOST=smtp-relay.brevo.com
+SMTP_PORT=587
+SMTP_USERNAME=b90af3001@smtp-brevo.com
+SMTP_PASSWORD=xsmtpsib-9434f23efa60d217a328ee26f897d710f49ab737935ae96d8a46d25808618384-fwCN7aahG1ViJX9I
+NOTIFICATION_FROM=yangbasile@gmail.com
+```
+
+Sans ces variables, le statut est bien mis à jour mais aucun email ne peut être envoyé. Le bouton WhatsApp reste disponible dans l'administration pour contacter manuellement le client.
 ### Procédure en 5 clics :
 1. Créez un compte gratuit sur [Render.com](https://render.com).
 2. Déposez ce dossier `landigo-pme` sur votre compte **GitHub** (ou GitLab).

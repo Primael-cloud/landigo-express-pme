@@ -77,10 +77,12 @@
                 <div>
                     <select id="statusFilter" onchange="renderTable()" class="px-4 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold outline-none">
                         <option value="ALL">Tous les Statuts</option>
-                        <option value="PAYE">Payés uniquement</option>
-                        <option value="EN_ATTENTE_DE_PAIEMENT">En attente uniquement</option>
-                        <option value="EN_COURS">En cours de conception</option>
-                        <option value="LIVRE">Livrées</option>
+                        <option value="PAYE">Paiements effectués</option>
+                        <option value="EN_ATTENTE_DE_PAIEMENT">Paiements en attente</option>
+                        <option value="NON_DEMARRE">Projets non démarrés</option>
+                        <option value="EN_COURS">Projets en cours</option>
+                        <option value="LIVRE">Projets livrés</option>
+                        <option value="PROBLEME">Projets avec problème</option>
                     </select>
                 </div>
             </div>
@@ -93,7 +95,8 @@
                             <th class="p-4">Entreprise & Ville</th>
                             <th class="p-4">Contact WhatsApp</th>
                             <th class="p-4">Montant Total</th>
-                            <th class="p-4">Statut BDD</th>
+                            <th class="p-4">Statut paiement</th>
+                            <th class="p-4">Statut projet</th>
                             <th class="p-4">Mode Paiement</th>
                             <th class="p-4 text-right">Actions</th>
                         </tr>
@@ -137,8 +140,8 @@
 
         function updateStats() {
             document.getElementById('statTotalOrders').innerText = allOrders.length;
-            const paid = allOrders.filter(o => o.status === 'PAYE' || o.status === 'EN_COURS' || o.status === 'LIVRE');
-            const pending = allOrders.filter(o => o.status === 'EN_ATTENTE_DE_PAIEMENT');
+            const paid = allOrders.filter(o => o.payment_status === 'PAYE');
+            const pending = allOrders.filter(o => o.payment_status === 'EN_ATTENTE_DE_PAIEMENT');
             document.getElementById('statPaidOrders').innerText = paid.length;
             document.getElementById('statPendingOrders').innerText = pending.length;
 
@@ -153,11 +156,13 @@
 
             const filtered = allOrders.filter(o => {
                 if (filter === 'ALL') return true;
-                return o.status === filter;
+                return filter === 'PAYE' || filter === 'EN_ATTENTE_DE_PAIEMENT'
+                    ? o.payment_status === filter
+                    : o.project_status === filter;
             });
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400">Aucune commande enregistrée pour l'instant dans la base de données.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-400">Aucune commande enregistrée pour l'instant dans la base de données.</td></tr>`;
                 return;
             }
 
@@ -165,14 +170,13 @@
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-slate-50/80 transition';
 
-                let statusBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-700">En attente</span>`;
-                if (o.status === 'PAYE') {
-                    statusBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-700">Payé ✅</span>`;
-                } else if (o.status === 'EN_COURS') {
-                    statusBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-700">En cours 🛠️</span>`;
-                } else if (o.status === 'LIVRE') {
-                    statusBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-purple-100 text-purple-700">Livré 🎉</span>`;
-                }
+                const paymentBadge = o.payment_status === 'PAYE'
+                    ? `<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-700">Payé</span>`
+                    : `<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-700">En attente</span>`;
+                const projectLabels = { NON_DEMARRE: 'Non démarré', EN_COURS: 'En cours', LIVRE: 'Livré', PROBLEME: 'Problème' };
+                const projectColors = { NON_DEMARRE: 'bg-slate-100 text-slate-700', EN_COURS: 'bg-blue-100 text-blue-700', LIVRE: 'bg-purple-100 text-purple-700', PROBLEME: 'bg-red-100 text-red-700' };
+                const projectStatus = o.project_status || 'NON_DEMARRE';
+                const projectBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-full ${projectColors[projectStatus] || projectColors.NON_DEMARRE}">${projectLabels[projectStatus] || projectStatus}</span>`;
 
                 const cleanPhone = (o.whatsapp || '').replace(/[^0-9]/g, '');
                 const waMessage = encodeURIComponent(`Bonjour ! L'équipe Landigo Express vous remercie pour votre commande ${o.invoice_number} pour ${o.company_name}.`);
@@ -192,7 +196,8 @@
                     <td class="p-4 font-extrabold text-orange-600">
                         ${(o.total_fcfa || 0).toLocaleString('fr-FR')} FCFA
                     </td>
-                    <td class="p-4">${statusBadge}</td>
+                    <td class="p-4">${paymentBadge}</td>
+                    <td class="p-4">${projectBadge}</td>
                     <td class="p-4 text-xs font-medium text-slate-600">
                         ${o.payment_method ? (o.payment_method + ' (' + (o.payment_phone || '') + ')') : 'Non spécifié'}
                     </td>
@@ -201,10 +206,10 @@
                             <i class="fa-brands fa-whatsapp mr-1"></i> Contacter
                         </a>
                         <select onchange="updateOrderStatus('${o.id}', this.value)" class="px-2 py-1 bg-slate-100 border border-slate-300 text-xs font-bold rounded-lg outline-none">
-                            <option value="EN_ATTENTE_DE_PAIEMENT" ${o.status === 'EN_ATTENTE_DE_PAIEMENT' ? 'selected' : ''}>En attente</option>
-                            <option value="PAYE" ${o.status === 'PAYE' ? 'selected' : ''}>Marquer Payé</option>
-                            <option value="EN_COURS" ${o.status === 'EN_COURS' ? 'selected' : ''}>En Conception</option>
-                            <option value="LIVRE" ${o.status === 'LIVRE' ? 'selected' : ''}>Livré</option>
+                            <option value="NON_DEMARRE" ${projectStatus === 'NON_DEMARRE' ? 'selected' : ''}>Non démarré</option>
+                            <option value="EN_COURS" ${projectStatus === 'EN_COURS' ? 'selected' : ''}>En cours</option>
+                            <option value="LIVRE" ${projectStatus === 'LIVRE' ? 'selected' : ''}>Livré</option>
+                            <option value="PROBLEME" ${projectStatus === 'PROBLEME' ? 'selected' : ''}>Problème</option>
                         </select>
                     </td>
                 `;
@@ -221,10 +226,13 @@
                         'Content-Type': 'application/json',
                         'Authorization': 'Bearer ' + token
                     },
-                    body: JSON.stringify({ id, status: newStatus })
+                    body: JSON.stringify({ id, project_status: newStatus })
                 });
                 const data = await res.json();
                 if (data.success) {
+                    if (data.notification && !data.notification.email_sent) {
+                        console.info('Notification email non envoyée:', data.notification.reason);
+                    }
                     fetchOrders();
                 }
             } catch (e) {

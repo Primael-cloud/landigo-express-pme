@@ -621,7 +621,7 @@
             document.getElementById('payAmountText').innerText = data.total_fcfa.toLocaleString('fr-FR') + ' FCFA';
 
             const statusBadge = document.getElementById('invStatusBadge');
-            if (data.status === 'PAYE') {
+            if ((data.payment_status || data.status) === 'PAYE') {
                 statusBadge.innerText = 'PAYÉ VIA ' + (data.payment_method || 'MOBILE MONEY');
                 statusBadge.className = 'inline-block px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full mb-1';
             } else {

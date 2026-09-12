@@ -7,6 +7,8 @@ import urllib.parse
 import urllib.error
 import urllib.request
 import uuid
+import smtplib
+from email.message import EmailMessage
 from datetime import datetime
 
 PORT = 8080
@@ -30,7 +32,12 @@ def load_env():
         "ADMIN_PASSWORD": "landigo2026!",
         "TOKEN": "landigo_admin_token_2026",
         "SUPABASE_URL": "",
-        "SUPABASE_SERVICE_ROLE_KEY": ""
+        "SUPABASE_SERVICE_ROLE_KEY": "",
+        "SMTP_HOST": "",
+        "SMTP_PORT": "587",
+        "SMTP_USERNAME": "",
+        "SMTP_PASSWORD": "",
+        "NOTIFICATION_FROM": ""
     }
     if os.path.exists(env_file):
         with open(env_file, "r", encoding="utf-8") as f:
@@ -89,6 +96,7 @@ STORE = SupabaseStore()
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS orders (
@@ -104,6 +112,8 @@ def init_db():
             items_json TEXT,
             total_fcfa INTEGER,
             status TEXT,
+            payment_status TEXT,
+            project_status TEXT,
             payment_method TEXT,
             payment_phone TEXT,
             transaction_id TEXT,
@@ -111,6 +121,13 @@ def init_db():
         )
     ''')
     conn.commit()
+    columns = {row[1] for row in cursor.execute("PRAGMA table_info(orders)").fetchall()}
+    if "payment_status" not in columns:
+        cursor.execute("ALTER TABLE orders ADD COLUMN payment_status TEXT")
+    if "project_status" not in columns:
+        cursor.execute("ALTER TABLE orders ADD COLUMN project_status TEXT")
+    cursor.execute("UPDATE orders SET payment_status = CASE WHEN status IN ('PAYE', 'EN_COURS', 'LIVRE') THEN 'PAYE' ELSE 'EN_ATTENTE_DE_PAIEMENT' END WHERE payment_status IS NULL")
+    cursor.execute("UPDATE orders SET project_status = CASE WHEN status = 'EN_COURS' THEN 'EN_COURS' WHEN status = 'LIVRE' THEN 'LIVRE' ELSE 'NON_DEMARRE' END WHERE project_status IS NULL")
     conn.close()
 
 init_db()
@@ -139,6 +156,8 @@ def order_for_supabase(data):
         "items_json": data.get("items", data.get("items_json", [])),
         "total_fcfa": data["total_fcfa"],
         "status": data["status"],
+        "payment_status": data.get("payment_status", data.get("status", "EN_ATTENTE_DE_PAIEMENT")),
+        "project_status": data.get("project_status", "NON_DEMARRE"),
         "payment_method": data.get("payment_method"),
         "payment_phone": data.get("payment_phone"),
         "transaction_id": data.get("transaction_id"),
@@ -154,12 +173,13 @@ def insert_order(order):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute('''
-        INSERT INTO orders (id, invoice_number, created_at, company_name, sector, whatsapp, email, city_country, options_json, items_json, total_fcfa, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO orders (id, invoice_number, created_at, company_name, sector, whatsapp, email, city_country, options_json, items_json, total_fcfa, status, payment_status, project_status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         order["id"], order["invoice_number"], order["created_at"], order["company_name"],
         order["sector"], order["whatsapp"], order["email"], order["city_country"],
-        json.dumps(order["options"]), json.dumps(order["items"]), order["total_fcfa"], order["status"]
+        json.dumps(order["options"]), json.dumps(order["items"]), order["total_fcfa"], order["status"],
+        order.get("payment_status", order["status"]), order.get("project_status", "NON_DEMARRE")
     ))
     conn.commit()
     conn.close()
@@ -171,6 +191,7 @@ def update_order(order_id, updates):
         return rows[0] if rows else None
 
     conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     assignments = ", ".join(f"{key} = ?" for key in updates)
     cursor.execute(f"UPDATE orders SET {assignments} WHERE id = ?", (*updates.values(), order_id))
@@ -213,23 +234,76 @@ def order_response(row):
         get = row.__getitem__
         return {
             "id": get("id"), "invoice_number": get("invoice_number"), "created_at": get("created_at"),
-            "company_name": get("company_name"), "sector": get("sector"), "whatsapp": get("whatsapp"),
+            "company_name": get("company_name"), "sector": get("sector"), "whatsapp": get("whatsapp"), "email": get("email"),
             "city_country": get("city_country"), "options": as_json_value(get("options_json")),
             "items": as_json_value(get("items_json")),
             "total_fcfa": get("total_fcfa"), "status": get("status"),
+            "payment_status": get("payment_status") or get("status"), "project_status": get("project_status") or "NON_DEMARRE",
             "payment_method": get("payment_method"), "payment_phone": get("payment_phone"),
             "transaction_id": get("transaction_id"), "paid_at": get("paid_at")
         }
 
     return {
         "id": row.get("id"), "invoice_number": row.get("invoice_number"), "created_at": row.get("created_at"),
-        "company_name": row.get("company_name"), "sector": row.get("sector"), "whatsapp": row.get("whatsapp"),
+        "company_name": row.get("company_name"), "sector": row.get("sector"), "whatsapp": row.get("whatsapp"), "email": row.get("email"),
         "city_country": row.get("city_country"), "options": as_json_value(row.get("options", row.get("options_json"))),
         "items": as_json_value(row.get("items", row.get("items_json"))),
         "total_fcfa": row.get("total_fcfa"), "status": row.get("status"),
+        "payment_status": row.get("payment_status") or row.get("status"), "project_status": row.get("project_status") or "NON_DEMARRE",
         "payment_method": row.get("payment_method"), "payment_phone": row.get("payment_phone"),
         "transaction_id": row.get("transaction_id"), "paid_at": row.get("paid_at")
     }
+
+
+def parse_datetime(value):
+    try:
+        return datetime.strptime(value, "%d/%m/%Y %H:%M")
+    except (TypeError, ValueError):
+        return None
+
+
+def send_client_notification(order, message):
+    host = ENV.get("SMTP_HOST", "")
+    username = ENV.get("SMTP_USERNAME", "")
+    password = ENV.get("SMTP_PASSWORD", "")
+    recipient = order.get("email")
+    if not host or not username or not password or not recipient or recipient == "N/A":
+        return {"email_sent": False, "reason": "SMTP non configuré ou email client absent"}
+
+    email = EmailMessage()
+    email["Subject"] = f"Mise à jour de votre projet Landigo - {order['invoice_number']}"
+    email["From"] = ENV.get("NOTIFICATION_FROM") or username
+    email["To"] = recipient
+    email.set_content(f"Bonjour {order.get('company_name', '')},\n\n{message}\n\nRéférence : {order['invoice_number']}\n\nL'équipe Landigo Express")
+    try:
+        with smtplib.SMTP(host, int(ENV.get("SMTP_PORT", "587")), timeout=15) as smtp:
+            smtp.starttls()
+            smtp.login(username, password)
+            smtp.send_message(email)
+        return {"email_sent": True}
+    except (OSError, smtplib.SMTPException, ValueError) as error:
+        print(f"Erreur notification email: {error}")
+        return {"email_sent": False, "reason": "Échec de l'envoi email"}
+
+
+def project_status_message(status):
+    return {
+        "EN_COURS": "Votre paiement a été confirmé et votre projet est maintenant en cours de réalisation.",
+        "LIVRE": "Votre projet est terminé et disponible pour livraison. Merci pour votre confiance.",
+        "PROBLEME": "Nous rencontrons un problème dans la réalisation de votre projet. Notre équipe vous contactera rapidement.",
+    }.get(status, f"Le statut de votre projet est maintenant : {status}.")
+
+
+def refresh_project_statuses():
+    now = datetime.now()
+    for row in list_orders():
+        order = order_response(row)
+        paid_at = parse_datetime(order.get("paid_at"))
+        if (order.get("payment_status") == "PAYE" and order.get("project_status") == "NON_DEMARRE"
+                and paid_at and (now - paid_at).total_seconds() >= 24 * 60 * 60):
+            updated = update_order(order["id"], {"project_status": "EN_COURS", "status": "EN_COURS"})
+            if updated:
+                send_client_notification(order_response(updated), project_status_message("EN_COURS"))
 
 class LandigoHandler(http.server.SimpleHTTPRequestHandler):
     def translate_path(self, path):
@@ -346,7 +420,9 @@ class LandigoHandler(http.server.SimpleHTTPRequestHandler):
             "options": options,
             "items": items,
             "total_fcfa": total,
-            "status": "EN_ATTENTE_DE_PAIEMENT"
+            "status": "EN_ATTENTE_DE_PAIEMENT",
+            "payment_status": "EN_ATTENTE_DE_PAIEMENT",
+            "project_status": "NON_DEMARRE"
         })
 
         brief_record = {
@@ -382,6 +458,7 @@ class LandigoHandler(http.server.SimpleHTTPRequestHandler):
 
         row = update_order(ref_id, {
             "status": "PAYE",
+            "payment_status": "PAYE",
             "payment_method": method,
             "payment_phone": phone,
             "transaction_id": tx_id,
@@ -418,6 +495,7 @@ class LandigoHandler(http.server.SimpleHTTPRequestHandler):
                 order_id = row["id"] if isinstance(row, sqlite3.Row) else row["id"]
                 update_order(order_id, {
                     "status": "PAYE",
+                    "payment_status": "PAYE",
                     "paid_at": now_str,
                     "transaction_id": cpay_trans_id
                 })
@@ -425,14 +503,27 @@ class LandigoHandler(http.server.SimpleHTTPRequestHandler):
         self.send_json({"status": "OK", "message": "Notification IPN CinetPay recue avec succes."})
 
     def handle_get_orders(self):
+        refresh_project_statuses()
         orders = [order_response(row) for row in list_orders()]
         self.send_json({"success": True, "orders": orders})
 
     def handle_update_status(self, data):
         ref_id = data.get("id")
-        new_status = data.get("status")
-        update_order(ref_id, {"status": new_status})
-        self.send_json({"success": True, "message": "Statut mis à jour dans la BDD."})
+        new_status = data.get("project_status") or data.get("status")
+        allowed = {"NON_DEMARRE", "EN_COURS", "LIVRE", "PROBLEME"}
+        if new_status not in allowed:
+            self.send_json({"error": "Statut de projet invalide"}, status=400)
+            return
+        previous = get_order(ref_id)
+        row = update_order(ref_id, {"project_status": new_status, "status": new_status})
+        if row and previous:
+            old_order = order_response(previous)
+            notification = {"email_sent": False, "reason": "Statut inchangé"}
+            if old_order.get("project_status") != new_status:
+                notification = send_client_notification(order_response(row), project_status_message(new_status))
+            self.send_json({"success": True, "message": "Statut du projet mis à jour.", "notification": notification, "data": order_response(row)})
+        else:
+            self.send_json({"error": "Commande introuvable"}, status=404)
 
     def handle_chat(self, data):
         message = data.get("message", "").lower()
